@@ -162,11 +162,33 @@ tbody tr:hover { background: #f8fbff; }
   .page { padding: 20px 16px 80px; }
   .table-wrap { overflow-x: auto; }
 }
-@media (max-width: 600px) {
-  .stats { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
   .nav-tabs { display: none; }
   .nav-mobile { display: flex; }
 }
+
+/* ── REGO STRIP ── */
+.rego-strip { margin-bottom: 24px; }
+.rego-strip-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px; }
+.rego-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+.rego-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; min-width: 160px; box-shadow: var(--shadow-sm); border-left: 3px solid var(--border); transition: box-shadow 0.15s; }
+.rego-card:hover { box-shadow: var(--shadow-md); }
+.rego-card.urgent { border-left-color: var(--red); background: #fff8f8; }
+.rego-card.soon { border-left-color: var(--amber); background: #fffbf0; }
+.rego-card.ok { border-left-color: var(--green); }
+.rego-card.unset { border-left-color: #cbd5e1; }
+.rego-vehicle { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.rego-rego { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.rego-days { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.rego-days.urgent { color: var(--red); }
+.rego-days.soon { color: var(--amber); }
+.rego-days.ok { color: var(--green); }
+.rego-days.unset { color: var(--text-light); font-size: 13px; font-weight: 500; }
+.rego-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.rego-label.urgent { color: var(--red); }
+.rego-label.soon { color: var(--amber); }
+.rego-label.ok { color: var(--green); }
+.rego-label.unset { color: var(--text-light); }
 </style>
 </head>
 <body>
@@ -193,6 +215,10 @@ tbody tr:hover { background: #f8fbff; }
   <!-- ==================== OVERVIEW TAB ==================== -->
   <div id="tab-overview" class="section active">
     <div class="stats" id="statsCards"></div>
+    <div class="rego-strip" id="regoStrip" style="display:none">
+      <div class="rego-strip-title">Rego Status</div>
+      <div class="rego-cards" id="regoCards"></div>
+    </div>
 
     <div class="section-header">
       <div class="section-title">Vehicle Fleet</div>
@@ -317,7 +343,7 @@ tbody tr:hover { background: #f8fbff; }
         <div class="field"><label>VIN</label><input id="v-vin" placeholder="17-char VIN"></div>
 
         <div class="form-section-label">Financial Terms</div>
-
+        <div class="field"><label>Rego Expiry Date</label><input id="v-regoExpiry" type="date"></div>
         <div class="field"><label>Security Bond ($)</label><input id="v-bond" type="number" step="0.01" placeholder="1000"></div>
         <div class="field"><label>DLF ($)</label><input id="v-dlf" type="number" step="0.01" placeholder="2000"></div>
         <div class="field">
@@ -458,6 +484,7 @@ function dbToVehicle(r) {
     interestTotal: r.interest_total_5y, insuranceMonthly: r.insurance_monthly,
     cpvYearly: r.cpv_yearly, serviceTotal: r.service_total_5y, miscTotal: r.misc_total_5y,
     purchaseDate: r.purchase_date, firstInstallmentDate: r.first_installment_date, loanTermMonths: r.loan_term_months,
+    regoExpiry: r.rego_expiry || null,
     lname: r.lessee_name, lemail: r.lessee_email,
     lphone: r.lessee_phone, status: r.status };
 }
@@ -471,6 +498,7 @@ function vehicleToDb(v) {
     misc_total_5y: parseFloat(v.miscTotal) || 0,
     purchase_date: v.purchaseDate || null, first_installment_date: v.firstInstallmentDate || null,
     loan_term_months: parseInt(v.loanTermMonths, 10) || 60,
+    rego_expiry: v.regoExpiry || null,
     lessee_name: v.lname || null, lessee_email: v.lemail || null,
     lessee_phone: v.lphone || null, status: v.status };
 }
