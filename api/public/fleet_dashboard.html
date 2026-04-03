@@ -344,8 +344,6 @@ tbody tr:hover { background: #f8fbff; }
 
         <div class="form-section-label">Financial Terms</div>
         <div class="field"><label>Rego Expiry Date</label><input id="v-regoExpiry" type="date"></div>
-        <div class="field"><label>Security Bond ($)</label><input id="v-bond" type="number" step="0.01" placeholder="1000"></div>
-        <div class="field"><label>DLF ($)</label><input id="v-dlf" type="number" step="0.01" placeholder="2000"></div>
         <div class="field">
           <label>Status</label>
           <select id="v-status">
@@ -429,7 +427,7 @@ tbody tr:hover { background: #f8fbff; }
       <!-- Vehicle info (read-only summary) -->
       <div style="background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 16px; margin-bottom:20px; font-size:13px;">
         <div style="font-weight:600; margin-bottom:4px;" id="c-vehicleSummary">Haval Jolion Pro Premium</div>
-        <div style="color:var(--text-muted)" id="c-vehicleDetails">Rego: ABC123 · Rate: $290/wk · Bond: $1000 · DLF: $2000</div>
+        <div style="color:var(--text-muted)" id="c-vehicleDetails">Rego: ABC123</div>
       </div>
 
       <div class="form-grid">
@@ -443,7 +441,8 @@ tbody tr:hover { background: #f8fbff; }
 
         <div class="form-section-label">Rental Terms</div>
         <div class="field"><label>Weekly Rental Rate ($)</label><input id="c-rate" type="number" step="0.01" placeholder="290"></div>
-        <div class="field span-2" style="font-size:12px; color:var(--text-muted); padding-top:2px;">This rate will be locked into the contract and saved to the vehicle record.</div>
+        <div class="field"><label>Security Bond ($)</label><input id="c-bond" type="number" step="0.01" placeholder="1000"></div>
+        <div class="field"><label>DLF ($)</label><input id="c-dlf" type="number" step="0.01" placeholder="2000"></div>
 
         <div class="form-section-label">Contract Dates</div>
         <div class="field"><label>Start Date</label><input id="c-startDate" type="date"></div>
@@ -723,7 +722,7 @@ function renderVehicles() {
 function openVehicleModal() {
   document.getElementById('vehicleModalTitle').textContent = 'Add Vehicle';
   document.getElementById('v-editId').value = '';
-  ['v-make','v-model','v-year','v-colour','v-rego','v-vin','v-bond','v-dlf','v-purchaseDate','v-firstInstallmentDate','v-loanTermMonths','v-carCost','v-monthlyRepayment','v-interestTotal'].forEach(id => document.getElementById(id).value = '');
+  ['v-make','v-model','v-year','v-colour','v-rego','v-vin','v-regoExpiry','v-purchaseDate','v-firstInstallmentDate','v-loanTermMonths','v-carCost','v-monthlyRepayment','v-interestTotal'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('v-loanTermMonths').value = '60';
   document.getElementById('v-status').value = 'available';
   document.getElementById('vehicleModalOverlay').classList.add('open');
@@ -745,9 +744,7 @@ function editVehicle(id) {
   document.getElementById('v-year').value = v.year || '';
   document.getElementById('v-colour').value = v.colour || '';
   document.getElementById('v-rego').value = v.rego || '';
-  document.getElementById('v-vin').value = v.vin || '';
-  document.getElementById('v-bond').value = v.bond || '';
-  document.getElementById('v-dlf').value = v.dlf || '';
+  document.getElementById('v-regoExpiry').value = v.regoExpiry || '';
   document.getElementById('v-purchaseDate').value = v.purchaseDate || '';
   document.getElementById('v-firstInstallmentDate').value = v.firstInstallmentDate || '';
   document.getElementById('v-loanTermMonths').value = v.loanTermMonths || '60';
@@ -771,8 +768,9 @@ async function saveVehicle() {
     rego: document.getElementById('v-rego').value,
     vin: document.getElementById('v-vin').value,
     rate: existing ? (existing.rate || 0) : 0,
-    bond: document.getElementById('v-bond').value,
-    dlf: document.getElementById('v-dlf').value,
+    regoExpiry: document.getElementById('v-regoExpiry').value || null,
+    bond: existing ? (existing.bond || 0) : 0,
+    dlf: existing ? (existing.dlf || 0) : 0,
     purchaseDate: document.getElementById('v-purchaseDate').value,
     firstInstallmentDate: document.getElementById('v-firstInstallmentDate').value,
     loanTermMonths: document.getElementById('v-loanTermMonths').value || '60',
