@@ -1097,9 +1097,12 @@ async function sendContract() {
   const startDate = document.getElementById('c-startDate').value;
   const endDate = document.getElementById('c-endDate').value;
 
-  if (!clientName || !clientEmail || !weeklyRate || !bondAmount || !startDate || !endDate) {
-    return alert('Please fill in Client Name, Email, Weekly Rate, Bond, Start Date, and End Date.');
-  }
+  if (!clientName) return alert('Please enter the Client Name.');
+  if (!clientEmail) return alert('Please enter a valid Client Email.');
+  if (!weeklyRate) return alert('Please enter the Weekly Rental Rate.');
+  if (!bondAmount) return alert('Please enter the Security Bond amount.');
+  if (!dlfAmount) return alert('Please enter the DLF amount.');
+  if (!startDate || !endDate) return alert('Please enter both Start and End dates.');
 
   const payload = {
     lessorName: 'Mani — MCR (Mani\'s Car Rentals)',

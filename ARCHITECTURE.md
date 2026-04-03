@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-This project is a **vehicle leasing business management tool** with two tightly connected parts:
+This project is the **MCR (Mani's Car Rentals) vehicle leasing business management tool** with two tightly connected parts:
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
@@ -29,11 +29,11 @@ This project is a **vehicle leasing business management tool** with two tightly 
 │  │ Add Vehicle  │   │ Log Expense  │   │ Send Contract           │   │
 │  │ (modal)      │   │ (modal)      │   │ (modal)                 │   │
 │  │              │   │              │   │                         │   │
-│  │ Just asset   │   │ Per vehicle  │   │ Pre-fills vehicle data  │   │
-│  │ details —    │   │ categorised  │   │ You enter: client name, │   │
-│  │ NO lessee    │   │ expenses     │   │ email, licence, dates   │   │
-│  │ info here    │   │              │   │                         │   │
-│  └──────┬───────┘   └──────┬───────┘   └───────────┬─────────────┘  │
+│  │  Just asset   │   │ Per vehicle  │   │ Pre-fills vehicle data  │   │
+│  details —    │   │ categorised  │   │ You enter: client,      │   │
+│  NO lessee    │   │ actual       │   │ dates, RATE, BOND, DLF  │   │
+│  info here    │   │ expenses     │   │ (saves back to vehicle) │   │
+└──────┬───────┘   └──────┬───────┘   └───────────┬─────────────┘  │
 │         │                  │                       │                 │
 │         ▼                  ▼                       ▼                 │
 │     Supabase          Supabase             POST {API_URL}/api/send  │
@@ -90,7 +90,7 @@ This project is a **vehicle leasing business management tool** with two tightly 
 |------|-------------|
 | `README.md` | Setup instructions, deployment steps, tech stack |
 | `ARCHITECTURE.md` | **This file** — system design and data flow |
-| `fleet_dashboard.html` | **Source dashboard file.** Vehicle registry, expense tracker, P&L, time-aware finance tracking, yearly cost breakdowns, contract dispatch, and a Contracts tab showing live signing status. Reads/writes all data directly to Supabase via the JS CDN client. Three config constants at the top of the script: `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`. Lessee info is ONLY set via the "Send Contract" modal, never via "Add Vehicle". |
+| `fleet_dashboard.html` | **Source dashboard file.** Vehicle registry, expense tracker logging actual outgoings, real-time rego countdown strip, active P&L dashboard, contract dispatch, and a Contracts tab showing live signing status. Reads/writes all data directly to Supabase via the JS CDN client. Three config constants at the top of the script: `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`. Lessee info and rental terms (Weekly Rate, Bond, DLF) are ONLY set via the "Send Contract" modal, never via "Add Vehicle" directly (though they save back to the vehicle record). |
 | `car_lease_fillable.html` | Standalone fillable contract. Click "Configure Contract" → fill fields → "Print as PDF". No backend needed. |
 
 ### `api/` — Next.js Backend (deploy to Vercel)
@@ -117,7 +117,7 @@ This project is a **vehicle leasing business management tool** with two tightly 
 Three tables defined in `api/supabase_schema.sql`:
 
 ### `vehicles`
-Stores every car in the fleet. Fields: `make`, `model`, `year`, `colour`, `rego`, `vin`, `weekly_rate`, `bond_amount`, `dlf_amount`, `car_cost`, `monthly_repayment`, `interest_total_5y`, `insurance_monthly`, `cpv_yearly`, `service_total_5y`, `misc_total_5y`, `purchase_date`, `first_installment_date`, `loan_term_months`, `lessee_name`, `lessee_email`, `lessee_phone`, `status` (active/available/maintenance).
+Stores every car in the fleet. Fields: `make`, `model`, `year`, `colour`, `rego`, `vin`, `weekly_rate`, `bond_amount`, `dlf_amount`, `car_cost`, `monthly_repayment`, `interest_total_5y`, `insurance_monthly`, `cpv_yearly`, `service_total_5y`, `misc_total_5y`, `purchase_date`, `first_installment_date`, `loan_term_months`, `rego_expiry`, `lessee_name`, `lessee_email`, `lessee_phone`, `status` (active/available/maintenance). Note: the UI relies on actual entries in the `expenses` table for Insurance, CPV, Servicing, and Misc rather than the static 5-year projections in this table.
 
 ### `expenses`
 Tracks outgoings per vehicle. Foreign key to `vehicles.id`. Categories: `insurance`, `rego`, `servicing`, `fuel`, `repairs`, `tolls`. Fields: `amount`, `expense_date`, `description`.
@@ -129,13 +129,13 @@ Every dispatched lease agreement. Contains full lessor/lessee details, vehicle i
 
 ## 5. Key Design Decisions
 
-1. **Lessee ≠ Vehicle property.** A vehicle is an asset. The lessee is only assigned when a contract is sent via the "Send Contract" modal. The "Add Vehicle" modal contains zero lessee fields.
+1. **Lessee and Financial Terms = Contract-scoped.** A vehicle is just an asset. The lessee, weekly rental rate, security bond, and DLF are ONLY set when a contract is sent via the "Send Contract" modal. They are locked into the contract, but also update the underlying vehicle record to keep the fleet table and P&L accurate.
 
 2. **Supabase as the source of truth.** The fleet dashboard loads all vehicles, expenses, and contracts from Supabase on boot via `Promise.all`. All CRUD operations write directly to Supabase using the JS CDN client with field-name adapters (`dbToVehicle`, `vehicleToDb`, `dbToExpense`, `expenseToDb`) to bridge JS camelCase and Supabase snake_case, including the per-vehicle finance dates, till-date calculations, and 5-year cost fields.
 
 3. **No authentication.** The admin dashboard has no login — the repo is private/hidden. Add auth later if needed.
 
-4. **Styling: "Cool, Professional, Subtle."** Inter font, soft slate backgrounds (`#f1f5f9`), subtle blue accent (`#2563eb`). No Tailwind — pure vanilla CSS. Never make it look like a basic MVP.
+4. **Styling: "Clean, Plain, Professional."** Inter font, plain light background, crisp grey 1px borders, no distracting accent colours or tooltip bulbs. Never make it look like a basic MVP—smooth transitions and careful spacing ensure a premium feel.
 
 5. **Vercel deployment.** Set root directory to `api/` when importing to Vercel. Add env vars in project settings.
 

@@ -1,6 +1,6 @@
 # Motor Vehicle Lease & Fleet Management System
 
-A full-stack digital signature web application and fleet management dashboard for executing motor vehicle lease contracts and tracking vehicle business performance. Lightweight, tailored "DocuSign alternative" combined with a financial operations dashboard.
+A full-stack digital signature web application and fleet management dashboard for MCR (Mani's Car Rentals). Lightweight, tailored "DocuSign alternative" combined with a financial operations dashboard.
 
 ## Repository Structure
 
@@ -55,7 +55,7 @@ Open `api/supabase_schema.sql` and copy the entire file contents into:
 **Supabase Dashboard → SQL Editor → New Query → Run**
 
 This creates three tables:
-- `vehicles` — Fleet registry (make, model, rego, lessee, rates, status, finance timing fields, and 5-year cost inputs)
+- `vehicles` — Fleet registry (make, model, rego, rego expiry, lessee, rates, status, finance timing fields, and 5-year cost inputs)
 - `expenses` — Outgoings per vehicle (insurance, rego, servicing, fuel, repairs, tolls)
 - `contracts` — Dispatched lease contracts with signature tracking
 
@@ -116,9 +116,9 @@ Use `http://localhost:3000` for `API_URL` during local development.
 ### Fleet Dashboard (`fleet_dashboard.html`)
 The central hub. In production it is served from `/fleet_dashboard.html` by Vercel. Requires Supabase credentials to be configured.
 
-1. **Overview tab** — Add vehicles, see stat cards (Total Vehicles, Active Leases, Monthly Revenue, Outgoings, Net Profit). Each vehicle also stores finance dates and inputs including purchase date, first installment date, loan term, car cost, repayments, interest, insurance, CPV, servicing, and misc totals.
-2. **Send Contract** — Click the green arrow icon on any vehicle row → fills vehicle data automatically → enter client details + dates → dispatches contract. On success a modal shows the signing link which can be copied if needed.
-3. **Outgoings tab** — Log expenses per vehicle (Insurance, Rego, Servicing, Fuel, Repairs, Tolls). Stored in Supabase.
+1. **Overview tab** — Add vehicles, see stat cards (Total Vehicles, Active Leases, Monthly Revenue, Outgoings, Net Profit), and track upcoming Rego renewals via the visual countdown strip. Each vehicle also stores finance dates and static inputs (purchase date, loan term, car cost, repayments, interest).
+2. **Send Contract** — Click the green arrow icon on any vehicle row → fills vehicle data automatically → enter client details, dates, and per-contract rental terms (Rate, Bond, DLF) → dispatches contract. On success a modal shows the signing link which can be copied if needed.
+3. **Outgoings tab** — Log operational expenses per vehicle (Insurance, Rego Renewals, Servicing, Fuel, Repairs, Tolls, Misc, CPV). These actual expenses are stored in Supabase and drive the dynamic P&L dashboard.
 4. **P&L tab** — Per-vehicle profit & loss cards with a Fleet Totals summary plus:
    - operational monthly P&L from rent and logged outgoings
    - finance expense till date
@@ -139,7 +139,7 @@ Standalone fillable contract. Click "Configure Contract" → fill all fields →
 ---
 
 ## Notes for Future AI Agents
-- The UI direction for this app is **"Cool, Professional, Subtle and Legal"**. Stick to the predefined CSS variables in `globals.css` (Inter typography, Slate backgrounds, crisp formatting). Avoid making it look like a cheap MVP.
+- The UI direction for this app is **"Clean, Plain, Professional"**. Stick to the predefined CSS variables in `globals.css` (Inter typography, plain light backgrounds, crisp 1px gray borders). Avoid making it look like a cheap MVP, but keep it minimal and without overly strong accent colors.
 - `react-signature-canvas` requires `"use client"` to function without throwing SSR mismatch errors in the Next.js App Router.
 - The fleet dashboard (`fleet_dashboard.html`) loads and saves all data directly to Supabase using the JS CDN client. `SUPABASE_URL` and `SUPABASE_ANON_KEY` must be set in the config block at the top of the script.
 - The `api/` folder is the Next.js root. When deploying to Vercel, set root directory to `api/`.
