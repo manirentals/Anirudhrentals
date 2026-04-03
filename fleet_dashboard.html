@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCR Fleet — Mani's Car Rentals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-light: #eff6ff;
+  --nav-bg: #ffffff;
+  --nav-accent: #1d4ed8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --green-border: #a7f3d0;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --amber-border: #fde68a;
+  --blue: #1d4ed8;
+  --blue-bg: #eff6ff;
+  --blue-border: #bfdbfe;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ── NAV ── */
+.nav { background: var(--nav-bg); border-bottom: 2px solid transparent; border-image: linear-gradient(to right, #e2e8f0, #1d4ed8 40%, #e2e8f0) 1; padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.nav-brand-badge { width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 11px; color: #fff; letter-spacing: 0.04em; flex-shrink: 0; box-shadow: 0 2px 8px rgba(29,78,216,0.3); }
+.nav-brand-text { font-weight: 700; font-size: 15px; color: var(--text); letter-spacing: -0.01em; }
+.nav-brand-sub { font-size: 10px; font-weight: 400; color: var(--text-muted); letter-spacing: 0.02em; display: block; margin-top: -2px; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; transition: all 0.18s; letter-spacing: 0.01em; }
+.nav-tab:hover { background: var(--accent-light); color: var(--accent); }
+.nav-tab.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+/* ── LAYOUT ── */
+.page { max-width: 1240px; margin: 0 auto; padding: 28px 32px 80px; }
+.section { display: none; }
+.section.active { display: block; animation: sectionFadeIn 0.25s ease; }
+@keyframes sectionFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── STAT CARDS ── */
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 20px 20px 24px; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s, transform 0.2s; position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 10px 0 0 10px; }
+.stat-card:nth-child(1)::before { background: #64748b; }
+.stat-card:nth-child(2)::before { background: var(--accent); }
+.stat-card:nth-child(3)::before { background: var(--green); }
+.stat-card:nth-child(4)::before { background: var(--red); }
+.stat-card:nth-child(5)::before { background: #8b5cf6; }
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-value.blue { color: var(--accent); }
+
+/* ── SECTION HEADER ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1); }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(29,78,216,0.25); }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 6px 16px rgba(29,78,216,0.35); transform: translateY(-2px); }
+.btn-outline { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); }
+.btn-outline:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+.btn-green { background: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(5,150,105,0.25); }
+.btn-green:hover { background: #047857; box-shadow: 0 6px 16px rgba(5,150,105,0.35); transform: translateY(-2px); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #fecaca; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 6px; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+.btn-icon:hover { background: var(--accent-light); color: var(--accent); border-color: var(--blue-border); transform: scale(1.05); }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); background: #f8fafc; border-bottom: 1px solid var(--border); }
+tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.12s; }
+tbody tr:hover { background: #f8fbff; }
+.vehicle-info { display: flex; flex-direction: column; gap: 2px; }
+.vehicle-name { font-weight: 600; color: var(--text); }
+.vehicle-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.badge-active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-available { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+.badge-maintenance { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge-pending { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge-signed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: var(--text-light); }
+.empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+/* ── MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100; backdrop-filter: blur(6px); align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+.modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal { background: var(--surface); width: 100%; max-width: 640px; border-radius: 14px; box-shadow: var(--shadow-lg); animation: slideUp .28s cubic-bezier(.16,1,.3,1); margin: auto; border: 1px solid var(--border); }
+@keyframes slideUp { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+.modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-head h2 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.modal-body { padding: 24px; }
+.modal-foot { padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 14px 14px; }
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.span-2 { grid-column: span 2; }
+.field label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.field input, .field select { border: 1px solid var(--border-strong); border-radius: 6px; padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text); background: #f8fafc; outline: none; transition: all .15s; }
+.field input:focus, .field select:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+.form-section-label { grid-column: span 2; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+
+/* ── EXPENSE CARDS ── */
+.expense-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.expense-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; font-size: 13px; }
+.expense-row .exp-left { display: flex; flex-direction: column; gap: 2px; }
+.expense-row .exp-cat { font-weight: 600; text-transform: capitalize; }
+.expense-row .exp-desc { font-size: 12px; color: var(--text-muted); }
+.expense-row .exp-right { display: flex; align-items: center; gap: 12px; }
+.expense-row .exp-amount { font-weight: 700; }
+.expense-row .exp-date { font-size: 12px; color: var(--text-muted); }
+
+/* ── P&L CARDS ── */
+.pnl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin-top: 16px; }
+.pnl-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); }
+.pnl-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.pnl-card-title { font-weight: 600; font-size: 14px; }
+.pnl-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+.pnl-row.total { font-weight: 700; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
+.pnl-row.subtotal { font-weight: 600; padding-top: 8px; margin-top: 6px; border-top: 1px dashed var(--border); }
+.pnl-row.muted span:first-child { color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+.pnl-block-title { margin-top: 14px; margin-bottom: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-section-label, .field.span-2 { grid-column: span 1; }
+  .pnl-grid { grid-template-columns: 1fr; }
+  .nav { padding: 0 16px; }
+  .page { padding: 20px 16px 80px; }
+  .table-wrap { overflow-x: auto; }
+}
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr; }
+  .nav-tabs { display: none; }
+  .nav-mobile { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-brand">
+    <div class="nav-brand-badge">MCR</div>
+    <div>
+      <span class="nav-brand-text">MCR Fleet</span>
+      <span class="nav-brand-sub">Mani's Car Rentals</span>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
+    <button class="nav-tab" onclick="switchTab('expenses')">Outgoings</button>
+    <button class="nav-tab" onclick="switchTab('pnl')">P&amp;L</button>
+    <button class="nav-tab" onclick="switchTab('contracts')">Contracts</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ==================== OVERVIEW TAB ==================== -->
+  <div id="tab-overview" class="section active">
+    <div class="stats" id="statsCards"></div>
+
+    <div class="section-header">
+      <div class="section-title">Vehicle Fleet</div>
+      <button class="btn btn-primary" onclick="openVehicleModal()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
+        Add Vehicle
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Rego</th>
+            <th>Current Lessee</th>
+            <th>Weekly Rent</th>
+            <th>Bond Held</th>
+            <th>Status</th>
+            <th style="width:100px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="vehicleTableBody">
+        </tbody>
+      </table>
+      <div id="emptyVehicles" class="empty-state" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 00-.785-2.032l-1.59-1.718A2.998 2.998 0 0015.476 9H12m-6 3V3.375a1.125 1.125 0 011.125-1.125h6.844c.298 0 .585.119.795.33l3.281 3.281c.21.21.33.497.33.795V12M6 12h6"/></svg>
+        <h3>No vehicles yet</h3>
+        <p>Add your first vehicle to start tracking your fleet.</p>
+        <button class="btn btn-primary" onclick="openVehicleModal()">Add Your First Vehicle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EXPENSES TAB ==================== -->
+  <div id="tab-expenses" class="section">
+    <div class="section-header">
+      <div class="section-title">Outgoings Tracker</div>
+      <button class="btn btn-primary" onclick="openExpenseModal()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
+        Log Expense
+      </button>
+    </div>
+
+    <!-- Filter by vehicle -->
+    <div style="margin-bottom:16px;">
+      <select id="expenseFilter" onchange="renderExpenses()" style="border:1px solid var(--border-strong); border-radius:6px; padding:9px 12px; font-family:'Inter',sans-serif; font-size:13px; background:#f8fafc; outline:none;">
+        <option value="all">All Vehicles</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Vehicle</th><th>Category</th><th>Description</th><th>Amount</th><th style="width:60px"></th></tr></thead>
+        <tbody id="expenseTableBody"></tbody>
+      </table>
+      <div id="emptyExpenses" class="empty-state" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+        <h3>No expenses logged</h3>
+        <p>Start tracking your outgoings by logging your first expense.</p>
+        <button class="btn btn-primary" onclick="openExpenseModal()">Log First Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== P&L TAB ==================== -->
+  <div id="tab-pnl" class="section">
+    <div class="section-header">
+      <div class="section-title">Profit &amp; Loss by Vehicle</div>
+    </div>
+    <div class="pnl-grid" id="pnlGrid"></div>
+    <div id="emptyPnl" class="empty-state" style="display:none;">
+      <h3>No data yet</h3>
+      <p>Add vehicles and log expenses to see your P&amp;L breakdown.</p>
+    </div>
+  </div>
+
+  <!-- ==================== CONTRACTS TAB ==================== -->
+  <div id="tab-contracts" class="section">
+    <div class="section-header">
+      <div class="section-title">Contracts</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Lessee</th>
+            <th>Sent</th>
+            <th>Lease Period</th>
+            <th>Status</th>
+            <th style="width:110px"></th>
+          </tr>
+        </thead>
+        <tbody id="contractTableBody"></tbody>
+      </table>
+      <div id="emptyContracts" class="empty-state" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        <h3>No contracts sent yet</h3>
+        <p>Send a contract from the Overview tab to see it here.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== VEHICLE MODAL ==================== -->
+<div class="modal-overlay" id="vehicleModalOverlay" onclick="if(event.target===this)closeVehicleModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="vehicleModalTitle">Add Vehicle</h2>
+      <button class="btn-icon" onclick="closeVehicleModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="v-editId">
+      <div class="form-grid">
+        <div class="form-section-label">Vehicle Information</div>
+        <div class="field"><label>Make</label><input id="v-make" placeholder="e.g. Haval"></div>
+        <div class="field"><label>Model</label><input id="v-model" placeholder="e.g. Jolion Pro Premium"></div>
+        <div class="field"><label>Year</label><input id="v-year" placeholder="e.g. 2023"></div>
+        <div class="field"><label>Colour</label><input id="v-colour" placeholder="e.g. Silver"></div>
+        <div class="field"><label>Registration</label><input id="v-rego" placeholder="e.g. ABC123"></div>
+        <div class="field"><label>VIN</label><input id="v-vin" placeholder="17-char VIN"></div>
+
+        <div class="form-section-label">Financial Terms</div>
+        <div class="field"><label>Weekly Rental Rate ($)</label><input id="v-rate" type="number" step="0.01" placeholder="290"></div>
+        <div class="field"><label>Security Bond ($)</label><input id="v-bond" type="number" step="0.01" placeholder="1000"></div>
+        <div class="field"><label>DLF ($)</label><input id="v-dlf" type="number" step="0.01" placeholder="2000"></div>
+        <div class="field">
+          <label>Status</label>
+          <select id="v-status">
+            <option value="available">Available</option>
+            <option value="active">Active (Leased)</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+        </div>
+
+        <div class="form-section-label">Finance Timeline</div>
+        <div class="field"><label>Purchase Date</label><input id="v-purchaseDate" type="date"></div>
+        <div class="field"><label>First Installment Date</label><input id="v-firstInstallmentDate" type="date"></div>
+        <div class="field"><label>Loan Term (months)</label><input id="v-loanTermMonths" type="number" step="1" min="1" placeholder="60" oninput="calcInterest()"></div>
+
+        <div class="form-section-label">Finance Inputs</div>
+        <div class="field"><label>Car Cost ($)</label><input id="v-carCost" type="number" step="0.01" placeholder="27500" oninput="calcInterest()"></div>
+        <div class="field"><label>Monthly Repayments ($)</label><input id="v-monthlyRepayment" type="number" step="0.01" placeholder="537" oninput="calcInterest()"></div>
+        <div class="field span-2">
+          <label>Interest over loan term ($) <span style="font-weight:400; color:var(--text-muted); font-size:11px;">— auto-calculated: (repayments × loan term) − car cost</span></label>
+          <input id="v-interestTotal" readonly placeholder="Calculated automatically" style="background:#f1f5f9; color:var(--text-muted); cursor:not-allowed;">
+        </div>
+        <div class="field span-2" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:10px 12px; font-size:12px; color:#92400e;">
+          💡 <strong>Insurance, Servicing, CPV, and Misc</strong> are now tracked in the <strong>Outgoings tab</strong> — log them as you pay.
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeVehicleModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVehicle()">Save Vehicle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EXPENSE MODAL ==================== -->
+<div class="modal-overlay" id="expenseModalOverlay" onclick="if(event.target===this)closeExpenseModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Log Expense</h2>
+      <button class="btn-icon" onclick="closeExpenseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>Vehicle</label>
+          <select id="e-vehicle"></select>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select id="e-category">
+            <option value="insurance">Insurance</option>
+            <option value="rego">Rego Renewal</option>
+            <option value="servicing">Servicing</option>
+            <option value="cpv">CPV</option>
+            <option value="fuel">Fuel</option>
+            <option value="repairs">Repairs</option>
+            <option value="tolls">Tolls</option>
+            <option value="misc">Misc</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount ($)</label><input id="e-amount" type="number" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Date</label><input id="e-date" type="date"></div>
+        <div class="field"><label>Description (optional)</label><input id="e-desc" placeholder="e.g. Annual CTP renewal"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeExpenseModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SEND CONTRACT MODAL ==================== -->
+<div class="modal-overlay" id="contractModalOverlay" onclick="if(event.target===this)closeContractModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="contractModalTitle">Send Contract</h2>
+      <button class="btn-icon" onclick="closeContractModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="c-vehicleId">
+
+      <!-- Vehicle info (read-only summary) -->
+      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 16px; margin-bottom:20px; font-size:13px;">
+        <div style="font-weight:600; margin-bottom:4px;" id="c-vehicleSummary">Haval Jolion Pro Premium</div>
+        <div style="color:var(--text-muted)" id="c-vehicleDetails">Rego: ABC123 · Rate: $290/wk · Bond: $1000 · DLF: $2000</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-section-label">Client Details</div>
+        <div class="field span-2"><label>Full Legal Name</label><input id="c-clientName"></div>
+        <div class="field span-2"><label>Email Address (contract will be sent here)</label><input id="c-clientEmail" type="email"></div>
+        <div class="field span-2"><label>Residential Address</label><input id="c-clientAddress"></div>
+        <div class="field"><label>Driver's Licence No.</label><input id="c-clientLicence"></div>
+        <div class="field"><label>Licence State</label><input id="c-clientState" placeholder="e.g. VIC"></div>
+        <div class="field"><label>Licence Expiry</label><input id="c-clientExpiry" type="date"></div>
+
+        <div class="form-section-label">Contract Dates</div>
+        <div class="field"><label>Start Date</label><input id="c-startDate" type="date"></div>
+        <div class="field"><label>End Date</label><input id="c-endDate" type="date"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeContractModal()">Cancel</button>
+      <button class="btn btn-green" onclick="sendContract()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+        Send Contract to Client
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — update these values after setup
+// ══════════════════════════════════════════════
+const API_URL = 'http://localhost:3000';
+const SUPABASE_URL = 'https://your-project.supabase.co'; // ← fill in
+const SUPABASE_ANON_KEY = 'your-anon-key';               // ← fill in
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ══════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════
+function uuid() { return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ══════════════════════════════════════════════
+// SUPABASE MAPPERS
+// ══════════════════════════════════════════════
+function dbToVehicle(r) {
+  return { id: r.id, make: r.make, model: r.model, year: r.year, colour: r.colour,
+    rego: r.rego, vin: r.vin, rate: r.weekly_rate, bond: r.bond_amount,
+    dlf: r.dlf_amount, carCost: r.car_cost, monthlyRepayment: r.monthly_repayment,
+    interestTotal: r.interest_total_5y, insuranceMonthly: r.insurance_monthly,
+    cpvYearly: r.cpv_yearly, serviceTotal: r.service_total_5y, miscTotal: r.misc_total_5y,
+    purchaseDate: r.purchase_date, firstInstallmentDate: r.first_installment_date, loanTermMonths: r.loan_term_months,
+    lname: r.lessee_name, lemail: r.lessee_email,
+    lphone: r.lessee_phone, status: r.status };
+}
+function vehicleToDb(v) {
+  return { make: v.make, model: v.model, year: v.year || null, colour: v.colour || null,
+    rego: v.rego || null, vin: v.vin || null, weekly_rate: parseFloat(v.rate) || 0,
+    bond_amount: parseFloat(v.bond) || 0, dlf_amount: parseFloat(v.dlf) || 0,
+    car_cost: parseFloat(v.carCost) || 0, monthly_repayment: parseFloat(v.monthlyRepayment) || 0,
+    interest_total_5y: parseFloat(v.interestTotal) || 0, insurance_monthly: parseFloat(v.insuranceMonthly) || 0,
+    cpv_yearly: parseFloat(v.cpvYearly) || 0, service_total_5y: parseFloat(v.serviceTotal) || 0,
+    misc_total_5y: parseFloat(v.miscTotal) || 0,
+    purchase_date: v.purchaseDate || null, first_installment_date: v.firstInstallmentDate || null,
+    loan_term_months: parseInt(v.loanTermMonths, 10) || 60,
+    lessee_name: v.lname || null, lessee_email: v.lemail || null,
+    lessee_phone: v.lphone || null, status: v.status };
+}
+function dbToExpense(r) {
+  return { id: r.id, vehicleId: r.vehicle_id, category: r.category,
+    amount: r.amount, date: r.expense_date, desc: r.description };
+}
+function expenseToDb(e) {
+  return { vehicle_id: e.vehicleId, category: e.category,
+    amount: parseFloat(e.amount), expense_date: e.date, description: e.desc || null };
+}
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let vehicles = [];
+let expenses = [];
+let contracts = [];
+
+function money(n) {
+  return `$${(parseFloat(n) || 0).toFixed(2)}`;
+}
+
+function parseDateValue(value) {
+  if (!value) return null;
+  const parts = value.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function addMonths(date, months) {
+  const copy = new Date(date.getTime());
+  copy.setMonth(copy.getMonth() + months);
+  return copy;
+}
+
+function addYears(date, years) {
+  const copy = new Date(date.getTime());
+  copy.setFullYear(copy.getFullYear() + years);
+  return copy;
+}
+
+function clampDateRange(start, end, rangeStart, rangeEnd) {
+  const actualStart = new Date(Math.max(start.getTime(), rangeStart.getTime()));
+  const actualEnd = new Date(Math.min(end.getTime(), rangeEnd.getTime()));
+  if (actualEnd <= actualStart) return 0;
+  return (actualEnd.getTime() - actualStart.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function calcInterest() {
+  const carCost = parseFloat(document.getElementById('v-carCost').value) || 0;
+  const monthly = parseFloat(document.getElementById('v-monthlyRepayment').value) || 0;
+  const term = parseInt(document.getElementById('v-loanTermMonths').value, 10) || 60;
+  if (carCost > 0 && monthly > 0) {
+    const interest = Math.max(0, (monthly * term) - carCost);
+    document.getElementById('v-interestTotal').value = interest.toFixed(2);
+  } else {
+    document.getElementById('v-interestTotal').value = '';
+  }
+}
+
+function getFinanceSnapshot(v) {
+  const purchaseDate = parseDateValue(v.purchaseDate);
+  const firstInstallmentDate = parseDateValue(v.firstInstallmentDate);
+  const loanTermMonths = Math.max(1, parseInt(v.loanTermMonths, 10) || 60);
+  const carCost = parseFloat(v.carCost) || 0;
+  const monthlyRepayment = parseFloat(v.monthlyRepayment) || 0;
+  // Interest is derived from the finance formula: (monthly × term) − car cost
+  const interestTotal = Math.max(0, (monthlyRepayment * loanTermMonths) - carCost);
+
+  const today = new Date();
+  const avgMonthDays = 365.25 / 12;
+  const financeAnchor = firstInstallmentDate || purchaseDate;
+  const loanEnd = financeAnchor ? addMonths(financeAnchor, loanTermMonths) : null;
+
+  const repaymentDaysToDate = financeAnchor && loanEnd ? clampDateRange(financeAnchor, loanEnd, financeAnchor, today) : 0;
+  const repaymentMonthsToDate = Math.min(loanTermMonths, repaymentDaysToDate / avgMonthDays);
+  const repaymentsTillDate = monthlyRepayment * repaymentMonthsToDate;
+
+  const totalLoanDays = financeAnchor && loanEnd
+    ? Math.max(1, (loanEnd.getTime() - financeAnchor.getTime()) / (1000 * 60 * 60 * 24))
+    : loanTermMonths * avgMonthDays;
+  const interestDaysToDate = financeAnchor && loanEnd ? clampDateRange(financeAnchor, loanEnd, financeAnchor, today) : 0;
+  const interestTillDate = interestTotal * Math.min(1, interestDaysToDate / totalLoanDays);
+
+  const carCostTillDate = purchaseDate && purchaseDate <= today ? carCost : 0;
+  const totalFinanceTillDate = carCostTillDate + repaymentsTillDate + interestTillDate;
+
+  const projectedRepaymentsFiveYears = monthlyRepayment * Math.min(loanTermMonths, 60);
+  const totalFinanceFiveYears = carCost + projectedRepaymentsFiveYears + interestTotal;
+
+  const fiveYearEnd = purchaseDate ? addYears(purchaseDate, 5) : null;
+  const yearBreakdown = purchaseDate ? Array.from({ length: 5 }, (_, index) => {
+    const yearStart = addYears(purchaseDate, index);
+    const yearEnd = addYears(purchaseDate, index + 1);
+    const yearRepaymentDays = financeAnchor && loanEnd ? clampDateRange(financeAnchor, loanEnd, yearStart, yearEnd) : 0;
+    const yearLoanDays = financeAnchor && loanEnd ? Math.max(1, (loanEnd.getTime() - financeAnchor.getTime()) / (1000 * 60 * 60 * 24)) : loanTermMonths * avgMonthDays;
+    const total = (index === 0 ? carCost : 0)
+      + (monthlyRepayment * (yearRepaymentDays / avgMonthDays))
+      + (interestTotal * Math.min(1, yearRepaymentDays / yearLoanDays));
+    return { label: `Year ${index + 1}`, total };
+  }) : [];
+
+  return {
+    purchaseDate, firstInstallmentDate, loanTermMonths,
+    carCost, monthlyRepayment, interestTotal,
+    repaymentsTillDate, interestTillDate,
+    carCostTillDate, totalFinanceTillDate,
+    projectedRepaymentsFiveYears, totalFinanceFiveYears,
+    yearBreakdown
+  };
+}
+
+// ══════════════════════════════════════════════
+// BOOT — load all data from Supabase
+// ══════════════════════════════════════════════
+async function boot() {
+  const [vRes, eRes, cRes] = await Promise.all([
+    sb.from('vehicles').select('*').order('created_at', { ascending: true }),
+    sb.from('expenses').select('*').order('expense_date', { ascending: false }),
+    sb.from('contracts').select('*').order('created_at', { ascending: false }),
+  ]);
+  vehicles  = (vRes.data  || []).map(dbToVehicle);
+  expenses  = (eRes.data  || []).map(dbToExpense);
+  contracts = cRes.data   || [];
+  renderAll();
+}
+
+function renderAll() {
+  renderVehicles();
+  populateVehicleDropdowns();
+  renderExpenses();
+  renderContracts();
+}
+
+boot();
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'pnl') renderPnL();
+  if (tab === 'expenses') renderExpenses();
+  if (tab === 'contracts') renderContracts();
+}
+
+// ══════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════
+function renderStats() {
+  const active = vehicles.filter(v => v.status === 'active');
+  const monthlyRevenue = active.reduce((s, v) => s + (parseFloat(v.rate) || 0) * 4.33, 0);
+  const totalExpenses = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  let monthlyExpenses = 0;
+  if (expenses.length) {
+    const dates = expenses.map(e => new Date(e.date).getTime()).filter(d => !isNaN(d));
+    if (dates.length) {
+      const earliest = Math.min(...dates);
+      const months = Math.max(1, (Date.now() - earliest) / (1000 * 60 * 60 * 24 * 30));
+      monthlyExpenses = totalExpenses / months;
+    }
+  }
+  const net = monthlyRevenue - monthlyExpenses;
+
+  document.getElementById('statsCards').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Vehicles</div><div class="stat-value">${vehicles.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Active Leases</div><div class="stat-value blue">${active.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Monthly Revenue</div><div class="stat-value green">$${monthlyRevenue.toFixed(0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Monthly Outgoings</div><div class="stat-value red">$${monthlyExpenses.toFixed(0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Est. Net Profit</div><div class="stat-value ${net >= 0 ? 'green' : 'red'}">$${net.toFixed(0)}</div></div>
+  `;
+}
+
+// ══════════════════════════════════════════════
+// VEHICLE TABLE
+// ══════════════════════════════════════════════
+function renderVehicles() {
+  renderStats();
+  const tbody = document.getElementById('vehicleTableBody');
+  const empty = document.getElementById('emptyVehicles');
+
+  if (!vehicles.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = vehicles.map(v => {
+    const lesseeCell = v.lname
+      ? `<div style="font-weight:500">${v.lname}</div><div style="font-size:11px;color:var(--text-muted)">${v.lemail || ''}</div>`
+      : '<span style="color:var(--text-light)">—</span>';
+    return `
+    <tr>
+      <td><div class="vehicle-info">
+        <span class="vehicle-name">${v.make} ${v.model}</span>
+        <span class="vehicle-sub">${v.year || ''} ${v.colour ? '· ' + v.colour : ''}</span>
+      </div></td>
+      <td style="font-weight:600; text-transform:uppercase">${v.rego || '—'}</td>
+      <td>${lesseeCell}</td>
+      <td style="font-weight:600">${v.rate ? '$' + parseFloat(v.rate).toFixed(0) : '—'}</td>
+      <td>${v.bond ? '$' + parseFloat(v.bond).toFixed(0) : '—'}</td>
+      <td><span class="badge badge-${v.status}">${v.status}</span></td>
+      <td><div style="display:flex; gap:6px;">
+        <button class="btn-icon" title="Send Contract" onclick="openContractModal('${v.id}')" style="color:var(--green);">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+        </button>
+        <button class="btn-icon" title="Edit" onclick="editVehicle('${v.id}')">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+        </button>
+        <button class="btn-icon" title="Delete" onclick="deleteVehicle('${v.id}')" style="color:var(--red);">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        </button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// VEHICLE MODAL
+// ══════════════════════════════════════════════
+function openVehicleModal() {
+  document.getElementById('vehicleModalTitle').textContent = 'Add Vehicle';
+  document.getElementById('v-editId').value = '';
+  ['v-make','v-model','v-year','v-colour','v-rego','v-vin','v-rate','v-bond','v-dlf','v-purchaseDate','v-firstInstallmentDate','v-loanTermMonths','v-carCost','v-monthlyRepayment','v-interestTotal'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('v-loanTermMonths').value = '60';
+  document.getElementById('v-status').value = 'available';
+  document.getElementById('vehicleModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVehicleModal() {
+  document.getElementById('vehicleModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function editVehicle(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById('vehicleModalTitle').textContent = 'Edit Vehicle';
+  document.getElementById('v-editId').value = v.id;
+  document.getElementById('v-make').value = v.make || '';
+  document.getElementById('v-model').value = v.model || '';
+  document.getElementById('v-year').value = v.year || '';
+  document.getElementById('v-colour').value = v.colour || '';
+  document.getElementById('v-rego').value = v.rego || '';
+  document.getElementById('v-vin').value = v.vin || '';
+  document.getElementById('v-rate').value = v.rate || '';
+  document.getElementById('v-bond').value = v.bond || '';
+  document.getElementById('v-dlf').value = v.dlf || '';
+  document.getElementById('v-purchaseDate').value = v.purchaseDate || '';
+  document.getElementById('v-firstInstallmentDate').value = v.firstInstallmentDate || '';
+  document.getElementById('v-loanTermMonths').value = v.loanTermMonths || '60';
+  document.getElementById('v-carCost').value = v.carCost || '';
+  document.getElementById('v-monthlyRepayment').value = v.monthlyRepayment || '';
+  document.getElementById('v-status').value = v.status || 'available';
+  calcInterest();
+  document.getElementById('vehicleModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveVehicle() {
+  const editId = document.getElementById('v-editId').value;
+  const existing = editId ? vehicles.find(x => x.id === editId) : null;
+  const data = {
+    id: editId || uuid(),
+    make: document.getElementById('v-make').value,
+    model: document.getElementById('v-model').value,
+    year: document.getElementById('v-year').value,
+    colour: document.getElementById('v-colour').value,
+    rego: document.getElementById('v-rego').value,
+    vin: document.getElementById('v-vin').value,
+    rate: document.getElementById('v-rate').value,
+    bond: document.getElementById('v-bond').value,
+    dlf: document.getElementById('v-dlf').value,
+    purchaseDate: document.getElementById('v-purchaseDate').value,
+    firstInstallmentDate: document.getElementById('v-firstInstallmentDate').value,
+    loanTermMonths: document.getElementById('v-loanTermMonths').value || '60',
+    carCost: document.getElementById('v-carCost').value,
+    monthlyRepayment: document.getElementById('v-monthlyRepayment').value,
+    interestTotal: document.getElementById('v-interestTotal').value,
+    insuranceMonthly: 0,
+    cpvYearly: 0,
+    serviceTotal: 0,
+    miscTotal: 0,
+    status: document.getElementById('v-status').value,
+    lname: existing ? existing.lname : '',
+    lemail: existing ? existing.lemail : '',
+    lphone: existing ? existing.lphone : '',
+  };
+  if (!data.make || !data.model) return alert('Please enter at least the Make and Model.');
+  if (!data.purchaseDate || !data.firstInstallmentDate) return alert('Please enter the Purchase Date and First Installment Date.');
+
+  if (editId) {
+    await sb.from('vehicles').update(vehicleToDb(data)).eq('id', editId);
+    vehicles = vehicles.map(v => v.id === editId ? data : v);
+  } else {
+    const { data: row } = await sb.from('vehicles').insert({ id: data.id, ...vehicleToDb(data) }).select().single();
+    if (row) data.id = row.id;
+    vehicles.push(data);
+  }
+  closeVehicleModal();
+  renderVehicles();
+  populateVehicleDropdowns();
+}
+
+async function deleteVehicle(id) {
+  if (!confirm('Delete this vehicle and all its associated expenses?')) return;
+  await sb.from('vehicles').delete().eq('id', id);
+  vehicles = vehicles.filter(v => v.id !== id);
+  expenses = expenses.filter(e => e.vehicleId !== id);
+  renderVehicles();
+  populateVehicleDropdowns();
+}
+
+// ══════════════════════════════════════════════
+// EXPENSE MODAL
+// ══════════════════════════════════════════════
+function openExpenseModal() {
+  populateVehicleDropdowns();
+  document.getElementById('e-amount').value = '';
+  document.getElementById('e-desc').value = '';
+  document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('e-category').value = 'insurance';
+  document.getElementById('expenseModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeExpenseModal() {
+  document.getElementById('expenseModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function saveExpense() {
+  const vehicleId = document.getElementById('e-vehicle').value;
+  const amount = document.getElementById('e-amount').value;
+  const date = document.getElementById('e-date').value;
+  if (!vehicleId || !amount || !date) return alert('Please fill in Vehicle, Amount, and Date.');
+  const newExpense = { id: uuid(), vehicleId, category: document.getElementById('e-category').value, amount, date, desc: document.getElementById('e-desc').value };
+  const { data: row } = await sb.from('expenses').insert({ id: newExpense.id, ...expenseToDb(newExpense) }).select().single();
+  if (row) newExpense.id = row.id;
+  expenses.push(newExpense);
+  closeExpenseModal();
+  renderExpenses();
+  renderStats();
+}
+
+async function deleteExpense(id) {
+  await sb.from('expenses').delete().eq('id', id);
+  expenses = expenses.filter(e => e.id !== id);
+  renderExpenses();
+  renderStats();
+}
+
+function renderExpenses() {
+  const filter = document.getElementById('expenseFilter').value;
+  let filtered = filter === 'all' ? expenses : expenses.filter(e => e.vehicleId === filter);
+  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const tbody = document.getElementById('expenseTableBody');
+  const empty = document.getElementById('emptyExpenses');
+
+  if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(e => {
+    const v = vehicles.find(x => x.id === e.vehicleId);
+    const vLabel = v ? `${v.make} ${v.model}` : 'Unknown';
+    const fmtDate = new Date(e.date + 'T00:00:00').toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `
+      <tr>
+        <td style="color:var(--text-muted)">${fmtDate}</td>
+        <td style="font-weight:500">${vLabel}</td>
+        <td><span style="text-transform:capitalize">${e.category}</span></td>
+        <td style="color:var(--text-muted)">${e.desc || '—'}</td>
+        <td style="font-weight:600; color:var(--red)">$${parseFloat(e.amount).toFixed(2)}</td>
+        <td><button class="btn-icon" onclick="deleteExpense('${e.id}')" style="color:var(--red);" title="Delete">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        </button></td>
+      </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// P&L
+// ══════════════════════════════════════════════
+function renderPnL() {
+  const grid = document.getElementById('pnlGrid');
+  const empty = document.getElementById('emptyPnl');
+
+  if (!vehicles.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  let totalRev = 0, totalExp = 0;
+
+  const cards = vehicles.map(v => {
+    const monthlyRev = (parseFloat(v.rate) || 0) * 4.33;
+    const vExpenses = expenses.filter(e => e.vehicleId === v.id);
+    const totalVExp = vExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const finance = getFinanceSnapshot(v);
+    const yearlyRows = finance.yearBreakdown.map(year =>
+      `<div class="pnl-row"><span>${year.label}</span><span>${money(year.total)}</span></div>`
+    ).join('');
+    const cats = {};
+    vExpenses.forEach(e => { cats[e.category] = (cats[e.category] || 0) + parseFloat(e.amount); });
+    let monthlyExp = 0;
+    if (vExpenses.length) {
+      const dates = vExpenses.map(e => new Date(e.date).getTime()).filter(d => !isNaN(d));
+      if (dates.length) {
+        const months = Math.max(1, (Date.now() - Math.min(...dates)) / (1000 * 60 * 60 * 24 * 30));
+        monthlyExp = totalVExp / months;
+      }
+    }
+    const net = monthlyRev - monthlyExp;
+    totalRev += monthlyRev;
+    totalExp += monthlyExp;
+    let catRows = Object.entries(cats).map(([cat, amt]) =>
+      `<div class="pnl-row"><span style="text-transform:capitalize">${cat}</span><span style="color:var(--red)">-$${amt.toFixed(0)}</span></div>`
+    ).join('');
+    if (!catRows) catRows = '<div class="pnl-row"><span style="color:var(--text-light)">No expenses logged</span><span>$0</span></div>';
+    return `
+      <div class="pnl-card">
+        <div class="pnl-card-head">
+          <span class="pnl-card-title">${v.make} ${v.model}</span>
+          <span class="badge badge-${v.status}">${v.status}</span>
+        </div>
+        <div class="pnl-row"><span style="font-weight:500">Monthly Revenue</span><span style="color:var(--green); font-weight:600">+$${monthlyRev.toFixed(0)}</span></div>
+        ${catRows}
+        <div class="pnl-row total"><span>Est. Monthly Net</span><span style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}; font-weight:700">$${net.toFixed(0)}</span></div>
+        <div class="pnl-block-title">Finance Timeline</div>
+        <div class="pnl-row"><span>Purchase Date</span><span>${v.purchaseDate || '—'}</span></div>
+        <div class="pnl-row"><span>First Installment</span><span>${v.firstInstallmentDate || '—'}</span></div>
+        <div class="pnl-row"><span>Loan Term</span><span>${finance.loanTermMonths} months</span></div>
+        <div class="pnl-block-title">Finance Cost Till Date</div>
+        <div class="pnl-row"><span>Car Cost</span><span>${money(finance.carCostTillDate)}</span></div>
+        <div class="pnl-row"><span>Repayments Till Date</span><span>${money(finance.repaymentsTillDate)}</span></div>
+        <div class="pnl-row"><span>Interest Till Date</span><span>${money(finance.interestTillDate)}</span></div>
+        <div class="pnl-row total"><span>Total Finance Till Date</span><span>${money(finance.totalFinanceTillDate)}</span></div>
+        <div class="pnl-block-title">Finance Yearly Breakdown (excl. operational)</div>
+        ${yearlyRows}
+        <div class="pnl-block-title">Finance 5-Year Total</div>
+        <div class="pnl-row"><span>Car Cost</span><span>${money(finance.carCost)}</span></div>
+        <div class="pnl-row"><span>Repayments over loan term</span><span>${money(finance.projectedRepaymentsFiveYears)}</span></div>
+        <div class="pnl-row"><span>Interest over loan term</span><span>${money(finance.interestTotal)}</span></div>
+        <div class="pnl-row total"><span>Total Finance Cost</span><span>${money(finance.totalFinanceFiveYears)}</span></div>
+        <div class="pnl-block-title">Actual Operational Outgoings</div>
+        <div class="pnl-row"><span style="color:var(--text-muted); font-size:12px">Insurance, servicing, CPV, fuel, repairs & misc logged in Outgoings tab</span><span style="font-weight:700; color:var(--red)">-$${totalVExp.toFixed(0)}</span></div>
+      </div>`;
+  }).join('');
+
+  const totalNet = totalRev - totalExp;
+  grid.innerHTML = cards + `
+    <div class="pnl-card" style="border: 2px solid var(--accent); background: var(--accent-light);">
+      <div class="pnl-card-head"><span class="pnl-card-title" style="color:var(--accent);">Fleet Totals</span></div>
+      <div class="pnl-row"><span>Total Monthly Revenue</span><span style="color:var(--green); font-weight:700">+$${totalRev.toFixed(0)}</span></div>
+      <div class="pnl-row"><span>Total Monthly Outgoings</span><span style="color:var(--red); font-weight:700">-$${totalExp.toFixed(0)}</span></div>
+      <div class="pnl-row total"><span>Total Monthly Net Profit</span><span style="color:${totalNet >= 0 ? 'var(--green)' : 'var(--red)'}; font-weight:700">$${totalNet.toFixed(0)}</span></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// CONTRACTS TAB
+// ══════════════════════════════════════════════
+function renderContracts() {
+  const tbody = document.getElementById('contractTableBody');
+  const empty = document.getElementById('emptyContracts');
+  if (!tbody) return;
+
+  if (!contracts.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = contracts.map(c => {
+    const fmtDate = new Date(c.created_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+    const signLink = `${API_URL}/sign/${c.id}`;
+    const statusBadge = c.status === 'signed'
+      ? '<span class="badge badge-signed">Signed</span>'
+      : '<span class="badge badge-pending">Pending</span>';
+    const actionBtn = c.status !== 'signed'
+      ? `<button class="btn btn-outline btn-sm" onclick="copyLink('${signLink}', this)">Copy Link</button>`
+      : '';
+    return `
+      <tr>
+        <td>
+          <div style="font-weight:600">${c.vehicle_make} ${c.vehicle_model}</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${c.vehicle_rego || '—'}</div>
+        </td>
+        <td>
+          <div style="font-weight:500">${c.client_name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${c.client_email}</div>
+        </td>
+        <td style="color:var(--text-muted)">${fmtDate}</td>
+        <td style="font-size:12px">${c.start_date || '—'} → ${c.end_date || '—'}</td>
+        <td>${statusBadge}</td>
+        <td>${actionBtn}</td>
+      </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function populateVehicleDropdowns() {
+  const opts = vehicles.map(v => `<option value="${v.id}">${v.make} ${v.model} (${v.rego || 'No Rego'})</option>`).join('');
+  document.getElementById('e-vehicle').innerHTML = opts || '<option value="">No vehicles added yet</option>';
+  const filterEl = document.getElementById('expenseFilter');
+  const current = filterEl.value;
+  filterEl.innerHTML = '<option value="all">All Vehicles</option>' + opts;
+  filterEl.value = current || 'all';
+}
+
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ══════════════════════════════════════════════
+// SEND CONTRACT MODAL
+// ══════════════════════════════════════════════
+function openContractModal(vehicleId) {
+  const v = vehicles.find(x => x.id === vehicleId);
+  if (!v) return;
+  document.getElementById('c-vehicleId').value = v.id;
+  document.getElementById('c-vehicleSummary').textContent = `${v.make} ${v.model} (${v.year || ''} ${v.colour || ''})`.trim();
+  document.getElementById('c-vehicleDetails').textContent = `Rego: ${v.rego || '—'} · Rate: $${v.rate || 0}/wk · Bond: $${v.bond || 0} · DLF: $${v.dlf || 0}`;
+  document.getElementById('c-clientName').value = v.lname || '';
+  document.getElementById('c-clientEmail').value = v.lemail || '';
+  document.getElementById('c-clientAddress').value = '';
+  document.getElementById('c-clientLicence').value = '';
+  document.getElementById('c-clientState').value = '';
+  document.getElementById('c-clientExpiry').value = '';
+  document.getElementById('c-startDate').value = '';
+  document.getElementById('c-endDate').value = '';
+  document.getElementById('contractModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeContractModal() {
+  document.getElementById('contractModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function sendContract() {
+  const vehicleId = document.getElementById('c-vehicleId').value;
+  const v = vehicles.find(x => x.id === vehicleId);
+  if (!v) return;
+
+  const clientName = document.getElementById('c-clientName').value;
+  const clientEmail = document.getElementById('c-clientEmail').value;
+  const startDate = document.getElementById('c-startDate').value;
+  const endDate = document.getElementById('c-endDate').value;
+
+  if (!clientName || !clientEmail || !startDate || !endDate) {
+    return alert('Please fill in Client Name, Email, Start Date, and End Date.');
+  }
+
+  const payload = {
+    lessorName: 'Mani — MCR (Mani\'s Car Rentals)',
+    lessorAddress: '36 Clearwater Rise Parade, Truganina VIC 3029',
+    lessorPhone: '+61 401 991 420',
+    clientName, clientEmail,
+    clientAddress: document.getElementById('c-clientAddress').value,
+    clientLicence: document.getElementById('c-clientLicence').value,
+    clientState: document.getElementById('c-clientState').value,
+    clientExpiry: document.getElementById('c-clientExpiry').value,
+    vehicleMake: v.make, vehicleModel: v.model,
+    vehicleYear: (v.year || '') + (v.colour ? ' / ' + v.colour : ''),
+    vehicleRego: v.rego || '', vehicleVin: v.vin || '',
+    startDate, endDate,
+    bondAmount: v.bond || '0', weeklyPayment: v.rate || '0', dlfAmount: v.dlf || '0',
+  };
+
+  const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const result = await res.json();
+  if (!res.ok) { alert('Error sending contract: ' + result.error); return; }
+
+  // Update vehicle lessee in Supabase and local state
+  await sb.from('vehicles').update({ lessee_name: clientName, lessee_email: clientEmail, status: 'active' }).eq('id', vehicleId);
+  v.status = 'active'; v.lname = clientName; v.lemail = clientEmail;
+  vehicles = vehicles.map(x => x.id === v.id ? v : x);
+
+  // Refresh contracts from Supabase
+  const { data: cData } = await sb.from('contracts').select('*').order('created_at', { ascending: false });
+  contracts = cData || [];
+
+  closeContractModal();
+  renderAll();
+  openSuccessModal(result.signLink, clientName, `${v.make} ${v.model}`, startDate, endDate);
+}
+
+// ══════════════════════════════════════════════
+// SUCCESS MODAL
+// ══════════════════════════════════════════════
+function openSuccessModal(signLink, clientName, vehicleName, startDate, endDate) {
+  document.getElementById('success-client').textContent = clientName;
+  document.getElementById('success-vehicle').textContent = vehicleName;
+  document.getElementById('success-term').textContent = `${startDate} to ${endDate}`;
+  document.getElementById('success-link').value = signLink;
+  document.getElementById('successModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSuccessModal() {
+  document.getElementById('successModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function copySuccessLink() {
+  const link = document.getElementById('success-link').value;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copySuccessBtn');
+    btn.textContent = 'Copied!';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => { btn.textContent = 'Copy Link'; btn.style.background = ''; }, 2000);
+  });
+}
+</script>
+<!-- ==================== SUCCESS MODAL ==================== -->
+<div class="modal-overlay" id="successModalOverlay" onclick="if(event.target===this)closeSuccessModal()">
+  <div class="modal">
+    <div class="modal-head" style="border-bottom-color:var(--green-border)">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;background:var(--green);border-radius:50%;display:grid;place-items:center;color:white;font-size:14px;flex-shrink:0">✓</div>
+        <h2 style="color:var(--green)">Contract Sent</h2>
+      </div>
+      <button class="btn-icon" onclick="closeSuccessModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;margin-bottom:20px;">
+        <li><span style="color:var(--text-muted)">Client:</span> <strong id="success-client"></strong></li>
+        <li><span style="color:var(--text-muted)">Vehicle:</span> <strong id="success-vehicle"></strong></li>
+        <li><span style="color:var(--text-muted)">Term:</span> <span id="success-term"></span></li>
+      </ul>
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;">Signing Link</div>
+      <div style="display:flex;gap:8px;">
+        <input id="success-link" readonly onclick="this.select()" style="flex:1;border:1px solid var(--border-strong);border-radius:6px;padding:9px 12px;font-size:12px;background:#f8fafc;color:var(--text);font-family:'Inter',sans-serif;outline:none;">
+        <button id="copySuccessBtn" class="btn btn-primary btn-sm" onclick="copySuccessLink()">Copy Link</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">The client has been emailed this link. Copy it if you need to share it manually.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeSuccessModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

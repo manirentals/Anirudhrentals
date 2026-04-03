@@ -1,0 +1,271 @@
+VIGNESH - BEFORE PRODUCTION CHECKLIST
+=====================================
+
+This file explains, in simple terms, what you need to do before this contract system goes live.
+
+
+1. WHAT THIS SYSTEM NEEDS TO WORK
+---------------------------------
+
+This project depends on 3 things:
+
+1. Supabase
+   This stores:
+   - vehicles
+   - expenses
+   - contracts
+   - signatures
+
+2. Resend
+   This sends the contract email to the customer.
+
+3. Your deployed website URL
+   This is used to create the signing link the customer opens.
+
+
+2. SUPABASE SETUP
+-----------------
+
+Goal:
+Create the database tables the app needs.
+
+Steps:
+
+1. Log in to Supabase
+2. Create a new project if you have not already done that
+3. In the left menu, click "SQL Editor"
+4. Click "New query"
+5. Open this file in the project:
+
+   api\supabase_schema.sql
+
+6. Copy everything from that file
+7. Paste it into the Supabase SQL Editor
+8. Click "Run"
+
+What this will create:
+- vehicles table
+- expenses table
+- contracts table
+- one auto-update trigger for vehicles
+- access rules so the app can read and write
+
+Important:
+The current SQL allows open access for the app using the anon key.
+That is okay for quick private use, but it is NOT ideal for a public production app.
+If this system will be exposed publicly, tighten security later.
+
+
+3. GET THE SUPABASE KEYS
+------------------------
+
+After the SQL is run:
+
+1. In Supabase, go to Settings
+2. Go to API
+3. Copy these 2 values:
+
+- Project URL
+- anon public key
+
+You will need them in the next steps.
+
+
+4. RESEND SETUP
+---------------
+
+Goal:
+Make contract emails send properly.
+
+Steps:
+
+1. Log in to Resend
+2. Create an API key
+3. Copy the API key
+
+Important:
+Right now the code sends from this test sender:
+
+Anirudh Contracts <onboarding@resend.dev>
+
+This is fine for testing, but before production you should use your own verified sending domain.
+
+Recommended production setup:
+
+1. Add your business domain in Resend
+   Example:
+   contracts.yourdomain.com
+   or
+   yourdomain.com
+
+2. Follow Resend's DNS instructions to verify the domain
+3. Once verified, update the sender email in this file:
+
+   api\app\api\send\route.ts
+
+Change this line:
+
+from: 'Anirudh Contracts <onboarding@resend.dev>'
+
+To something like:
+
+from: 'Anirudh Contracts <contracts@yourdomain.com>'
+
+If you do not do this, email sending may stay in test mode or look less professional.
+
+
+5. ENVIRONMENT VARIABLES
+------------------------
+
+This project needs these 4 environment variables:
+
+- RESEND_API_KEY
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- NEXT_PUBLIC_APP_URL
+
+You can see them listed in:
+
+api\.env.example
+
+What each one means:
+
+- RESEND_API_KEY
+  Lets the app send email
+
+- NEXT_PUBLIC_SUPABASE_URL
+  Tells the app which Supabase project to use
+
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+  Lets the app connect to Supabase from the browser
+
+- NEXT_PUBLIC_APP_URL
+  The public website address used to build the signing link
+
+
+6. WHERE TO PUT THOSE VALUES
+----------------------------
+
+For local testing:
+
+1. Go into the api folder
+2. Create a file called:
+
+   .env.local
+
+3. Put the values in like this:
+
+   RESEND_API_KEY=your_real_resend_key
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_real_anon_key
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+For production hosting (for example Vercel):
+
+Add the same 4 variables in the hosting dashboard.
+
+Important:
+In production, NEXT_PUBLIC_APP_URL must be your real live URL.
+
+Example:
+
+NEXT_PUBLIC_APP_URL=https://your-project.vercel.app
+
+
+7. UPDATE THE FLEET DASHBOARD HTML
+----------------------------------
+
+Open this file:
+
+fleet_dashboard.html
+
+At the top of the script, update these 3 values:
+
+- API_URL
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
+
+What to put:
+
+- API_URL = your deployed Next.js app URL
+- SUPABASE_URL = your Supabase project URL
+- SUPABASE_ANON_KEY = your Supabase anon key
+
+For example:
+
+const API_URL = 'https://your-project.vercel.app';
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key';
+
+If you leave these as placeholders, the dashboard will not work.
+
+
+8. DEPLOYMENT REMINDER
+----------------------
+
+If deploying to Vercel:
+
+1. Import the repo into Vercel
+2. Set the Root Directory to:
+
+   api
+
+3. Add the 4 environment variables there
+4. Deploy
+5. Copy the final Vercel URL
+6. Put that URL into:
+   - NEXT_PUBLIC_APP_URL in Vercel env vars
+   - API_URL inside fleet_dashboard.html
+
+
+9. TEST BEFORE GOING LIVE
+-------------------------
+
+Before production, test this exact flow:
+
+1. Open the dashboard
+2. Add a vehicle
+3. Send a contract
+4. Confirm a row appears in the contracts table in Supabase
+5. Confirm the email is received
+6. Open the signing link from the email
+7. Sign the contract
+8. Confirm the contract status changes to "signed" in Supabase
+9. Confirm the signature image is saved in the contracts table
+
+
+10. IMPORTANT PRODUCTION WARNINGS
+---------------------------------
+
+Please review these before going live:
+
+1. The app currently has no login/authentication
+   Anyone with access to the dashboard can use it
+
+2. The current Supabase policy allows broad access
+   Fine for a private/internal tool
+   Not ideal for a public app
+
+3. The sender email should be changed from onboarding@resend.dev to your verified business email
+
+4. The fleet dashboard HTML must not keep placeholder URLs
+
+5. Test one full contract flow from send to sign before sharing it with real customers
+
+
+11. QUICK SUMMARY
+-----------------
+
+If you only want the short version, do these 6 things:
+
+1. Run api\supabase_schema.sql in Supabase SQL Editor
+   If the project was already set up earlier, also run api\supabase_vehicle_cost_fields.sql
+   This now adds finance date fields too:
+   - purchase_date
+   - first_installment_date
+   - loan_term_months
+2. Copy Supabase URL and anon key
+3. Create a Resend API key
+4. Add all 4 env vars to local/prod
+5. Update fleet_dashboard.html and api\public\fleet_dashboard.html with real URLs and key
+6. Change the Resend sender email to a verified business email before production
