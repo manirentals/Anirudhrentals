@@ -787,13 +787,14 @@ async function saveVehicle() {
     lphone: existing ? existing.lphone : '',
   };
   if (!data.make || !data.model) return alert('Please enter at least the Make and Model.');
-  if (!data.purchaseDate || !data.firstInstallmentDate) return alert('Please enter the Purchase Date and First Installment Date.');
 
   if (editId) {
-    await sb.from('vehicles').update(vehicleToDb(data)).eq('id', editId);
+    const { error } = await sb.from('vehicles').update(vehicleToDb(data)).eq('id', editId);
+    if (error) return alert('Supabase Error (Update): ' + error.message);
     vehicles = vehicles.map(v => v.id === editId ? data : v);
   } else {
-    const { data: row } = await sb.from('vehicles').insert({ id: data.id, ...vehicleToDb(data) }).select().single();
+    const { data: row, error } = await sb.from('vehicles').insert({ id: data.id, ...vehicleToDb(data) }).select().single();
+    if (error) return alert('Supabase Error (Insert): ' + error.message);
     if (row) data.id = row.id;
     vehicles.push(data);
   }
@@ -1023,8 +1024,10 @@ function openContractModal(vehicleId) {
   if (!v) return;
   document.getElementById('c-vehicleId').value = v.id;
   document.getElementById('c-vehicleSummary').textContent = `${v.make} ${v.model} (${v.year || ''} ${v.colour || ''})`.trim();
-  document.getElementById('c-vehicleDetails').textContent = `Rego: ${v.rego || '—'} · Bond: $${v.bond || 0} · DLF: $${v.dlf || 0}`;
+  document.getElementById('c-vehicleDetails').textContent = `Rego: ${v.rego || '—'}`;
   document.getElementById('c-rate').value = v.rate || '';
+  document.getElementById('c-bond').value = v.bond || '';
+  document.getElementById('c-dlf').value = v.dlf || '';
   document.getElementById('c-clientName').value = v.lname || '';
   document.getElementById('c-clientEmail').value = v.lemail || '';
   document.getElementById('c-clientAddress').value = '';
@@ -1050,12 +1053,17 @@ async function sendContract() {
   const clientName = document.getElementById('c-clientName').value;
   const clientEmail = document.getElementById('c-clientEmail').value;
   const weeklyRate = document.getElementById('c-rate').value;
+  const bondAmount = document.getElementById('c-bond').value;
+  const dlfAmount = document.getElementById('c-dlf').value;
   const startDate = document.getElementById('c-startDate').value;
   const endDate = document.getElementById('c-endDate').value;
 
-  if (!clientName || !clientEmail || !weeklyRate || !startDate || !endDate) {
-    return alert('Please fill in Client Name, Email, Weekly Rate, Start Date, and End Date.');
-  }
+  if (!clientName) return alert('Please enter the Client Name.');
+  if (!clientEmail) return alert('Please enter a valid Client Email.');
+  if (!weeklyRate) return alert('Please enter the Weekly Rental Rate.');
+  if (!bondAmount) return alert('Please enter the Security Bond amount.');
+  if (!dlfAmount) return alert('Please enter the DLF amount.');
+  if (!startDate || !endDate) return alert('Please enter both Start and End dates.');
 
   const payload = {
     lessorName: 'Mani — MCR (Mani\'s Car Rentals)',
@@ -1070,16 +1078,16 @@ async function sendContract() {
     vehicleYear: (v.year || '') + (v.colour ? ' / ' + v.colour : ''),
     vehicleRego: v.rego || '', vehicleVin: v.vin || '',
     startDate, endDate,
-    bondAmount: v.bond || '0', weeklyPayment: weeklyRate, dlfAmount: v.dlf || '0',
+    bondAmount: bondAmount || '0', weeklyPayment: weeklyRate, dlfAmount: dlfAmount || '0',
   };
 
   const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const result = await res.json();
   if (!res.ok) { alert('Error sending contract: ' + result.error); return; }
 
-  // Update vehicle lessee + rate in Supabase and local state
-  await sb.from('vehicles').update({ lessee_name: clientName, lessee_email: clientEmail, weekly_rate: parseFloat(weeklyRate) || 0, status: 'active' }).eq('id', vehicleId);
-  v.status = 'active'; v.lname = clientName; v.lemail = clientEmail; v.rate = weeklyRate;
+  // Update vehicle lessee + rate + bond + dlf in Supabase and local state
+  await sb.from('vehicles').update({ lessee_name: clientName, lessee_email: clientEmail, weekly_rate: parseFloat(weeklyRate) || 0, bond_amount: parseFloat(bondAmount) || 0, dlf_amount: parseFloat(dlfAmount) || 0, status: 'active' }).eq('id', vehicleId);
+  v.status = 'active'; v.lname = clientName; v.lemail = clientEmail; v.rate = weeklyRate; v.bond = bondAmount; v.dlf = dlfAmount;
   vehicles = vehicles.map(x => x.id === v.id ? v : x);
 
   // Refresh contracts from Supabase

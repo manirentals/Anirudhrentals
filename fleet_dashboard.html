@@ -827,13 +827,14 @@ async function saveVehicle() {
     lphone: existing ? existing.lphone : '',
   };
   if (!data.make || !data.model) return alert('Please enter at least the Make and Model.');
-  if (!data.purchaseDate || !data.firstInstallmentDate) return alert('Please enter the Purchase Date and First Installment Date.');
 
   if (editId) {
-    await sb.from('vehicles').update(vehicleToDb(data)).eq('id', editId);
+    const { error } = await sb.from('vehicles').update(vehicleToDb(data)).eq('id', editId);
+    if (error) return alert('Supabase Error (Update): ' + error.message);
     vehicles = vehicles.map(v => v.id === editId ? data : v);
   } else {
-    const { data: row } = await sb.from('vehicles').insert({ id: data.id, ...vehicleToDb(data) }).select().single();
+    const { data: row, error } = await sb.from('vehicles').insert({ id: data.id, ...vehicleToDb(data) }).select().single();
+    if (error) return alert('Supabase Error (Insert): ' + error.message);
     if (row) data.id = row.id;
     vehicles.push(data);
   }
