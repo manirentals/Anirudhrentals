@@ -107,8 +107,9 @@ This project is the **MCR (Mani's Car Rentals) vehicle leasing business manageme
 | `public/fleet_dashboard.html` | Vercel-served homepage dashboard available at `/fleet_dashboard.html` |
 | `app/page.tsx` | Redirects the site root to `/fleet_dashboard.html` |
 | `app/admin/page.tsx` | Admin dashboard page — form to input contract details and trigger dispatch via `/api/send` |
-| `app/api/send/route.ts` | **POST endpoint.** Receives contract data → inserts into Supabase `contracts` table → sends email via Resend with a unique `/sign/[id]` link. Has CORS headers configured to allow requests from the standalone fleet dashboard HTML. If `RESEND_API_KEY` is not set, it skips the email and logs the link to the console. |
-| `app/sign/[id]/page.tsx` | **Client-facing page.** Fetches contract by ID from Supabase → renders professional legal agreement → captures digital signature → updates `signature`, `signed_at`, and `status='signed'` in Supabase. Shows an error if the contract ID is not found. |
+| `app/api/send/route.ts` | **POST endpoint.** Receives contract data → inserts into Supabase `contracts` table → sends email via Resend with a unique `/sign/[id]` link. Has CORS headers configured to allow requests from the standalone fleet dashboard HTML. |
+| `app/api/config/route.ts` | **GET endpoint.** Returns `NEXT_PUBLIC_` environment variables to the dashboard. Allows the static HTML dashboard to "auto-configure" on Vercel without manual hardcoding. |
+| `app/sign/[id]/page.tsx` | **Client-facing page.** Fetches contract by ID from Supabase → renders professional legal agreement → captures digital signature → updates `signature`, `signed_at`, and `status='signed'` in Supabase. |
 
 ---
 
@@ -156,12 +157,14 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 
 ## 7. Configuration in fleet_dashboard.html
 
-Three config constants at the top of the `<script>` block must be filled in:
+The fleet dashboard features **Auto-Config**. On boot, it calls `/api/config` to fetch environment variables from Vercel. 
+
+For local development without the API, you can manually set these `let` variables at the top of the dashboard script:
 
 ```js
-const API_URL         = 'http://localhost:3000';            // Update to your Vercel URL after deployment
-const SUPABASE_URL    = 'https://your-project.supabase.co'; // From Supabase dashboard → Settings → API
-const SUPABASE_ANON_KEY = 'your-anon-key';                  // From Supabase dashboard → Settings → API
+let API_URL           = 'http://localhost:3000';
+let SUPABASE_URL      = 'https://your-project.supabase.co';
+let SUPABASE_ANON_KEY = 'your-anon-key';
 ```
 
 The Supabase anon key is safe to expose in client-side code — it is a public key. Row-level security (RLS) controls what the anon key can access.
@@ -171,6 +174,8 @@ The Supabase anon key is safe to expose in client-side code — it is a public k
 ```
 Page Load
   └── boot()
+        └── tryConfig() → GET /api/config (fetches Vercel env vars)
+        └── supabase.createClient(URL, KEY)
         └── Promise.all([vehicles, expenses, contracts]) from Supabase
               └── renderAll() → renders all 4 tabs
 

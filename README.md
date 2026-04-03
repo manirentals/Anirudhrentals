@@ -97,17 +97,19 @@ The manual contract sender sits at `http://localhost:3000/admin`.
 3. Add the environment variables from step 2 in Vercel project settings
 4. Update `NEXT_PUBLIC_APP_URL` to your production domain, for example `https://anirudhrentals.vercel.app`
 
-### 5. Connect the Fleet Dashboard to Supabase and the API
+### 5. Automatic Configuration (Vercel)
 
-Open `fleet_dashboard.html` and `api/public/fleet_dashboard.html` in a text editor and update the three config constants at the top of the `<script>` block:
+If you are deploying to Vercel, the dashboard will **automatically** connect to your Supabase project using the environment variables set in step 4. No manual file editing is required.
+
+### 6. Local Development Configuration (Manual)
+
+If running `fleet_dashboard.html` locally without the Next.js dev server, open the file in a text editor and update the constants at the top of the script:
 
 ```js
-const API_URL         = 'https://your-project.vercel.app';  // ← your Vercel URL
-const SUPABASE_URL    = 'https://your-project.supabase.co'; // ← from Supabase dashboard
-const SUPABASE_ANON_KEY = 'your-anon-key';                  // ← from Supabase dashboard
+let API_URL           = 'http://localhost:3000';
+let SUPABASE_URL      = 'https://your-project.supabase.co';
+let SUPABASE_ANON_KEY = 'your-anon-key';
 ```
-
-Use `http://localhost:3000` for `API_URL` during local development.
 
 ---
 
@@ -141,8 +143,8 @@ Standalone fillable contract. Click "Configure Contract" → fill all fields →
 ## Notes for Future AI Agents
 - The UI direction for this app is **"Clean, Plain, Professional"**. Stick to the predefined CSS variables in `globals.css` (Inter typography, plain light backgrounds, crisp 1px gray borders). Avoid making it look like a cheap MVP, but keep it minimal and without overly strong accent colors.
 - `react-signature-canvas` requires `"use client"` to function without throwing SSR mismatch errors in the Next.js App Router.
-- The fleet dashboard (`fleet_dashboard.html`) loads and saves all data directly to Supabase using the JS CDN client. `SUPABASE_URL` and `SUPABASE_ANON_KEY` must be set in the config block at the top of the script.
+- The fleet dashboard (`fleet_dashboard.html`) features **Auto-Config**. On boot, it attempts to fetch configuration from `/api/config`. If this fails (e.g., during local offline development), it falls back to any hardcoded values in the script.
 - The `api/` folder is the Next.js root. When deploying to Vercel, set root directory to `api/`.
 - The API route (`/api/send`) has CORS headers configured to allow requests from the standalone fleet dashboard HTML file.
-- If `RESEND_API_KEY` is not set, the API still saves the contract to Supabase and returns the signing link — it just skips sending the email. Useful for testing the DB flow before Resend is configured.
-- The Contracts tab in the fleet dashboard constructs signing links as `${API_URL}/sign/${contract.id}` — keep `API_URL` pointing at the deployed Next.js app.
+- If `RESEND_API_KEY` is not set, the API still saves the contract to Supabase and returns the signing link — it just skips sending the email.
+- The Contracts tab in the fleet dashboard constructs signing links using the `API_URL` returned by the config handshake.
