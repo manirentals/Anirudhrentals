@@ -17,7 +17,40 @@ export async function OPTIONS() {
 export async function POST(req: Request) {
   try {
     const data = await req.json();
-    
+
+    // ── Resend-only path: contract already updated by client, just send email ──
+    if (data.updateId) {
+      const baseUrl  = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const signLink = `${baseUrl}/sign/${data.updateId}`;
+
+      if (process.env.RESEND_API_KEY) {
+        await resend.emails.send({
+          from: 'Anirudh Contracts <onboarding@resend.dev>',
+          to: [data.clientEmail],
+          subject: `Updated Contract — ${data.vehicleMake} ${data.vehicleModel} (${data.vehicleRego})`,
+          html: `
+            <div style="font-family:Arial,sans-serif;padding:20px;color:#333;">
+              <h2>Hello ${data.clientName},</h2>
+              <p>Your Motor Vehicle Rental Agreement has been updated and requires your signature.</p>
+              <div style="background:#f8fafc;padding:15px;border-radius:8px;margin:20px 0;border:1px solid #e2e8f0;">
+                <p><strong>Vehicle:</strong> ${data.vehicleMake} ${data.vehicleModel} (${data.vehicleRego})</p>
+                <p><strong>Rental Term:</strong> ${data.startDate} to ${data.endDate}</p>
+                <p><strong>Weekly Rent:</strong> $${data.weeklyPayment}</p>
+              </div>
+              <a href="${signLink}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">
+                Review & Sign Updated Contract
+              </a>
+              <p style="margin-top:30px;font-size:12px;color:#666;">The signing link is the same as before — your previous signature has been cleared.</p>
+            </div>
+          `,
+        });
+      } else {
+        console.log('RESEND_API_KEY not set. Would have resent email with link:', signLink);
+      }
+
+      return NextResponse.json({ success: true, signLink }, { headers: corsHeaders });
+    }
+
     const { data: contractData, error: dbError } = await supabase
       .from('contracts')
       .insert([

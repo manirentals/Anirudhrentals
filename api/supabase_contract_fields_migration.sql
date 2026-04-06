@@ -46,6 +46,11 @@ ALTER TABLE vehicles
 ALTER TABLE contracts
   ADD COLUMN IF NOT EXISTS client_phone          TEXT;
 
+-- ── Add lessor signature columns (dual-party signing) ──
+ALTER TABLE contracts
+  ADD COLUMN IF NOT EXISTS lessor_signature  TEXT,
+  ADD COLUMN IF NOT EXISTS lessor_signed_at  TIMESTAMPTZ;
+
 -- ── Add vehicle return tracking columns ──
 -- Run this block if you added the Return Vehicle feature
 ALTER TABLE vehicles

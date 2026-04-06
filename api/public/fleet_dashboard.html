@@ -309,7 +309,8 @@ tbody tr:hover { background: #f8fbff; }
             <th>Sent</th>
             <th>Lease Period</th>
             <th>Status</th>
-            <th style="width:110px"></th>
+            <th>Signatures</th>
+            <th style="width:140px">Actions</th>
           </tr>
         </thead>
         <tbody id="contractTableBody"></tbody>
@@ -572,6 +573,7 @@ function expenseToDb(e) {
 let vehicles = [];
 let expenses = [];
 let contracts = [];
+let editingContractId = null;
 
 function money(n) {
   return `$${(parseFloat(n) || 0).toFixed(2)}`;
@@ -1040,29 +1042,69 @@ function renderContracts() {
   empty.style.display = 'none';
 
   tbody.innerHTML = contracts.map(c => {
-    const fmtDate = new Date(c.created_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
-    const signLink = `${API_URL}/sign/${c.id}`;
-    const statusBadge = c.status === 'signed'
-      ? '<span class="badge badge-signed">Signed</span>'
-      : '<span class="badge badge-pending">Pending</span>';
-    const actionBtn = c.external_link 
-      ? `<a href="${c.external_link}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">View External</a>`
-      : (c.status !== 'signed' ? `<button class="btn btn-outline btn-sm" onclick="copyLink('${signLink}', this)">Copy Link</button>` : '');
+    const fmtDate     = new Date(c.created_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+    const signLink    = `${API_URL}/sign/${c.id}`;
+    const lesseeSig   = !!c.signature;
+    const lessorSig   = !!c.lessor_signature;
+    const bothSigned  = lesseeSig && lessorSig;
+
+    // Status badge
+    let statusBadge;
+    if (bothSigned) {
+      statusBadge = '<span class="badge badge-signed">Signed</span>';
+    } else if (lesseeSig) {
+      statusBadge = '<span class="badge" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">Awaiting Lessor</span>';
+    } else if (lessorSig) {
+      statusBadge = '<span class="badge" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">Awaiting Lessee</span>';
+    } else {
+      statusBadge = '<span class="badge badge-pending">Pending</span>';
+    }
+
+    // Signatures column
+    const sigCol = `<div style="display:flex;flex-direction:column;gap:3px;font-size:11px;">
+      <span style="color:${lessorSig ? 'var(--green)' : 'var(--text-light)'};">
+        ${lessorSig ? '✓' : '—'} Lessor
+      </span>
+      <span style="color:${lesseeSig ? 'var(--green)' : 'var(--text-light)'};">
+        ${lesseeSig ? '✓' : '—'} Lessee
+      </span>
+    </div>`;
+
+    // Action buttons
+    let actions;
+    if (bothSigned) {
+      actions = '<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>Locked</span>';
+    } else if (c.external_link) {
+      actions = `<a href="${c.external_link}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">View External</a>`;
+    } else {
+      const editBtn = `<button class="btn-icon" title="Edit Contract" onclick="openEditContractModal('${c.id}')">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+      </button>`;
+      const signBtn = !lessorSig ? `<button class="btn-icon" title="Sign as Lessor" onclick="openLessorSignModal('${c.id}')" style="color:var(--accent);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+      </button>` : '';
+      const copyBtn = `<button class="btn-icon" title="Copy Signing Link" onclick="copyLink('${signLink}', this)">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+      </button>`;
+      actions = `<div style="display:flex;gap:4px;align-items:center;">${editBtn}${signBtn}${copyBtn}</div>`;
+    }
+
     return `
       <tr>
         <td>
           <div style="font-weight:600">${c.vehicle_make} ${c.vehicle_model}</div>
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${c.vehicle_rego || '—'}</div>
-          ${c.external_link ? '<div style="font-size:10px; color:var(--accent); font-weight:600; margin-top:2px;">EXTERNAL</div>' : ''}
+          ${c.external_link ? '<div style="font-size:10px;color:var(--accent);font-weight:600;margin-top:2px;">EXTERNAL</div>' : ''}
         </td>
         <td>
           <div style="font-weight:500">${c.client_name}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${c.client_email}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${c.client_email || ''}</div>
         </td>
         <td style="color:var(--text-muted)">${fmtDate}</td>
         <td style="font-size:12px">${c.start_date || '—'} → ${c.end_date || '—'}</td>
         <td>${statusBadge}</td>
-        <td>${actionBtn}</td>
+        <td>${sigCol}</td>
+        <td>${actions}</td>
       </tr>`;
   }).join('');
 }
@@ -1116,6 +1158,169 @@ function openContractModal(vehicleId) {
 
   document.getElementById('contractModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function openEditContractModal(contractId) {
+  const c = contracts.find(x => x.id === contractId);
+  if (!c) return;
+
+  // Find the vehicle for the summary bar
+  const v = vehicles.find(x =>
+    x.make === c.vehicle_make && x.model === c.vehicle_model && x.rego === c.vehicle_rego
+  );
+
+  editingContractId = contractId;
+
+  document.getElementById('contractModalTitle').textContent = 'Edit Contract';
+  document.getElementById('c-vehicleId').value = v ? v.id : '';
+  document.getElementById('c-vehicleSummary').textContent = `${c.vehicle_make} ${c.vehicle_model} (${c.vehicle_year || ''} ${c.vehicle_colour || ''})`.trim();
+  document.getElementById('c-vehicleDetails').textContent = `Rego: ${c.vehicle_rego || '—'}`;
+
+  // Lessee details
+  document.getElementById('c-clientName').value    = c.client_name    || '';
+  document.getElementById('c-clientEmail').value   = c.client_email   || '';
+  document.getElementById('c-clientPhone').value   = c.client_phone   || '';
+  document.getElementById('c-clientAddress').value = c.client_address || '';
+  document.getElementById('c-clientLicence').value = c.client_licence || '';
+  document.getElementById('c-clientState').value   = c.client_state   || '';
+  document.getElementById('c-clientExpiry').value  = c.client_expiry  || '';
+
+  // Emergency contact
+  document.getElementById('c-emergName').value         = c.emerg_name         || '';
+  document.getElementById('c-emergRelationship').value = c.emerg_relationship || '';
+  document.getElementById('c-emergPhone').value        = c.emerg_phone        || '';
+
+  // Rental terms
+  document.getElementById('c-rate').value            = c.weekly_payment   || '';
+  document.getElementById('c-bond').value            = c.bond_amount      || '';
+  document.getElementById('c-bondDueDate').value     = c.bond_due_date    || '';
+  document.getElementById('c-dlf').value             = c.dlf_amount       || '';
+  document.getElementById('c-insuranceExcess').value = c.insurance_excess || '$1,000';
+  document.getElementById('c-startDate').value       = c.start_date       || '';
+  document.getElementById('c-endDate').value         = c.end_date         || '';
+
+  // Handover condition
+  document.getElementById('c-odometer').value      = c.ho_odometer || '';
+  document.getElementById('c-fuelLevel').value     = c.ho_fuel     || '';
+  document.getElementById('c-existingDamage').value = c.ho_damage  || '';
+
+  // Update button labels for edit mode
+  document.getElementById('c-saveBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Update (No Email)';
+  document.getElementById('c-sendBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Update & Resend Email';
+
+  // Reset external section
+  document.getElementById('c-isExternal').checked = false;
+  document.getElementById('c-externalLink').value = '';
+  document.getElementById('c-externalLinkContainer').style.display = 'none';
+
+  document.getElementById('contractModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function _contractModalFields() {
+  const vehicleId = document.getElementById('c-vehicleId').value;
+  const v = vehicles.find(x => x.id === vehicleId);
+  return {
+    vehicleId, v,
+    clientName:    document.getElementById('c-clientName').value,
+    clientEmail:   document.getElementById('c-clientEmail').value,
+    clientPhone:   document.getElementById('c-clientPhone').value,
+    clientAddress: document.getElementById('c-clientAddress').value,
+    clientLicence: document.getElementById('c-clientLicence').value,
+    clientState:   document.getElementById('c-clientState').value,
+    clientExpiry:  document.getElementById('c-clientExpiry').value,
+    emergName:     document.getElementById('c-emergName').value,
+    emergRel:      document.getElementById('c-emergRelationship').value,
+    emergPhone:    document.getElementById('c-emergPhone').value,
+    weeklyRate:    document.getElementById('c-rate').value,
+    bondAmount:    document.getElementById('c-bond').value,
+    bondDueDate:   document.getElementById('c-bondDueDate').value,
+    dlfAmount:     document.getElementById('c-dlf').value,
+    insuranceExcess: document.getElementById('c-insuranceExcess').value || '$1,000',
+    startDate:     document.getElementById('c-startDate').value,
+    endDate:       document.getElementById('c-endDate').value,
+    odometer:      document.getElementById('c-odometer').value,
+    fuelLevel:     document.getElementById('c-fuelLevel').value,
+    existingDamage: document.getElementById('c-existingDamage').value,
+  };
+}
+
+async function updateExistingContract(sendEmail) {
+  const f = _contractModalFields();
+  if (!f.clientName) return alert('Please enter the Client Name.');
+
+  const existing = contracts.find(x => x.id === editingContractId);
+  const hasSigs = existing && (existing.signature || existing.lessor_signature);
+  if (hasSigs) {
+    if (!confirm('Editing this contract will clear all existing signatures. The lessee and lessor will need to sign again. Continue?')) return;
+  }
+
+  const btn = sendEmail ? document.getElementById('c-sendBtn') : document.getElementById('c-saveBtn');
+  const origLabel = btn.innerHTML;
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const update = {
+    client_name: f.clientName, client_email: f.clientEmail, client_phone: f.clientPhone || null,
+    client_address: f.clientAddress, client_licence: f.clientLicence,
+    client_state: f.clientState, client_expiry: f.clientExpiry,
+    emerg_name: f.emergName || null, emerg_relationship: f.emergRel || null, emerg_phone: f.emergPhone || null,
+    vehicle_make: f.v ? f.v.make : existing.vehicle_make,
+    vehicle_model: f.v ? f.v.model : existing.vehicle_model,
+    vehicle_year: f.v ? f.v.year : existing.vehicle_year,
+    vehicle_colour: f.v ? f.v.colour : existing.vehicle_colour,
+    vehicle_rego: f.v ? f.v.rego : existing.vehicle_rego,
+    vehicle_vin: f.v ? f.v.vin : existing.vehicle_vin,
+    weekly_payment: f.weeklyRate, bond_amount: f.bondAmount,
+    bond_due_date: f.bondDueDate || null, dlf_amount: f.dlfAmount,
+    insurance_excess: f.insuranceExcess, start_date: f.startDate, end_date: f.endDate,
+    ho_odometer: f.odometer || null, ho_fuel: f.fuelLevel || null, ho_damage: f.existingDamage || null,
+    // Clear all signatures so both parties must re-sign
+    signature: null, signed_at: null,
+    lessor_signature: null, lessor_signed_at: null,
+    status: 'pending'
+  };
+
+  const { error } = await sb.from('contracts').update(update).eq('id', editingContractId);
+  if (error) {
+    alert('Update failed: ' + error.message);
+    btn.innerHTML = origLabel; btn.disabled = false;
+    return;
+  }
+
+  // If sendEmail, fire the resend endpoint
+  if (sendEmail) {
+    await fetch(`${API_URL}/api/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updateId: editingContractId, clientName: f.clientName, clientEmail: f.clientEmail,
+        vehicleMake: update.vehicle_make, vehicleModel: update.vehicle_model, vehicleRego: update.vehicle_rego,
+        weeklyPayment: f.weeklyRate, startDate: f.startDate, endDate: f.endDate })
+    });
+  }
+
+  // Refresh contracts and local vehicle
+  const { data: cData } = await sb.from('contracts').select('*').order('created_at', { ascending: false });
+  contracts = cData || [];
+  if (f.v) {
+    await sb.from('vehicles').update({
+      lessee_name: f.clientName, lessee_email: f.clientEmail || null, lessee_phone: f.clientPhone || null,
+      lessee_address: f.clientAddress || null, lessee_licence: f.clientLicence || null,
+      lessee_state: f.clientState || null, lessee_expiry: f.clientExpiry || null,
+      weekly_rate: parseFloat(f.weeklyRate) || 0,
+      bond_amount: parseFloat(f.bondAmount) || 0,
+      dlf_amount: parseFloat(f.dlfAmount) || 0,
+    }).eq('id', f.vehicleId);
+    f.v.lname = f.clientName; f.v.lemail = f.clientEmail; f.v.rate = f.weeklyRate;
+    vehicles = vehicles.map(x => x.id === f.v.id ? f.v : x);
+  }
+
+  editingContractId = null;
+  // Reset button labels
+  document.getElementById('c-saveBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Save to Vehicle';
+  document.getElementById('c-sendBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Send Contract to Client';
+  closeContractModal();
+  renderAll();
+  alert(sendEmail ? 'Contract updated and email resent!' : 'Contract updated. No email sent.');
 }
 
 function toggleExternalFields() {
@@ -1405,6 +1610,7 @@ body{background:#D6D1C7;font-family:'Sora',sans-serif;color:var(--dark);}
 }
 
 async function saveContractOnly() {
+  if (editingContractId) return updateExistingContract(false);
   const vehicleId = document.getElementById('c-vehicleId').value;
   const v = vehicles.find(x => x.id === vehicleId);
   if (!v) return;
@@ -1499,9 +1705,17 @@ async function saveContractOnly() {
 function closeContractModal() {
   document.getElementById('contractModalOverlay').classList.remove('open');
   document.body.style.overflow = '';
+  // Reset edit mode and button labels if we were editing
+  if (editingContractId) {
+    editingContractId = null;
+    document.getElementById('contractModalTitle').textContent = 'Send Contract';
+    document.getElementById('c-saveBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Save to Vehicle';
+    document.getElementById('c-sendBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Send Contract to Client';
+  }
 }
 
 async function sendContract() {
+  if (editingContractId) return updateExistingContract(true);
   const vehicleId = document.getElementById('c-vehicleId').value;
   const v = vehicles.find(x => x.id === vehicleId);
   if (!v) return;
@@ -1646,6 +1860,113 @@ function openReturnModal(vehicleId) {
   document.body.style.overflow = 'hidden';
 }
 
+// ══════════════════════════════════════════════
+// LESSOR SIGN
+// ══════════════════════════════════════════════
+let _lsCanvas = null, _lsCtx = null, _lsDrawing = false, _lsSigningContractId = null;
+
+function _initLessorCanvas() {
+  _lsCanvas = document.getElementById('ls-sigCanvas');
+  _lsCtx    = _lsCanvas.getContext('2d');
+  // Scale canvas for device pixel ratio (sharp on retina)
+  const dpr = window.devicePixelRatio || 1;
+  const rect = _lsCanvas.getBoundingClientRect();
+  _lsCanvas.width  = rect.width  * dpr;
+  _lsCanvas.height = rect.height * dpr;
+  _lsCtx.scale(dpr, dpr);
+  _lsCtx.strokeStyle = '#1A1A1A';
+  _lsCtx.lineWidth   = 2;
+  _lsCtx.lineCap     = 'round';
+  _lsCtx.lineJoin    = 'round';
+
+  function pos(e) {
+    const r = _lsCanvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+  _lsCanvas.onmousedown  = e => { _lsDrawing = true; const p = pos(e); _lsCtx.beginPath(); _lsCtx.moveTo(p.x, p.y); };
+  _lsCanvas.onmousemove  = e => { if (!_lsDrawing) return; const p = pos(e); _lsCtx.lineTo(p.x, p.y); _lsCtx.stroke(); };
+  _lsCanvas.onmouseup    = () => { _lsDrawing = false; };
+  _lsCanvas.onmouseleave = () => { _lsDrawing = false; };
+  _lsCanvas.ontouchstart = e => { e.preventDefault(); _lsDrawing = true; const p = pos(e); _lsCtx.beginPath(); _lsCtx.moveTo(p.x, p.y); };
+  _lsCanvas.ontouchmove  = e => { e.preventDefault(); if (!_lsDrawing) return; const p = pos(e); _lsCtx.lineTo(p.x, p.y); _lsCtx.stroke(); };
+  _lsCanvas.ontouchend   = () => { _lsDrawing = false; };
+}
+
+function clearLessorCanvas() {
+  if (_lsCtx && _lsCanvas) _lsCtx.clearRect(0, 0, _lsCanvas.width, _lsCanvas.height);
+}
+
+function _isLessorCanvasBlank() {
+  if (!_lsCanvas) return true;
+  const data = _lsCtx.getImageData(0, 0, _lsCanvas.width, _lsCanvas.height).data;
+  return !data.some(v => v !== 0);
+}
+
+function openLessorSignModal(contractId) {
+  const c = contracts.find(x => x.id === contractId);
+  if (!c) return;
+
+  _lsSigningContractId = contractId;
+  document.getElementById('ls-contractId').value = contractId;
+  document.getElementById('ls-vehicleSummary').textContent = `${c.vehicle_make} ${c.vehicle_model} — ${c.vehicle_rego || '—'}`;
+  document.getElementById('ls-lesseeName').textContent = c.client_name || '—';
+  document.getElementById('ls-period').textContent = `${c.start_date || '?'} → ${c.end_date || '?'}`;
+  document.getElementById('ls-rate').textContent = c.weekly_payment ? `$${c.weekly_payment}/wk` : '—';
+  document.getElementById('ls-awaitingNote').style.display = c.signature ? 'none' : 'block';
+
+  document.getElementById('lessorSignModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Init canvas after modal is visible so getBoundingClientRect is accurate
+  setTimeout(_initLessorCanvas, 50);
+}
+
+function closeLessorSignModal() {
+  document.getElementById('lessorSignModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _lsSigningContractId = null;
+}
+
+async function saveLessorSignature() {
+  if (_isLessorCanvasBlank()) return alert('Please draw your signature before confirming.');
+
+  const btn = document.getElementById('ls-signBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const dataUrl = _lsCanvas.toDataURL('image/png');
+  const now     = new Date().toISOString();
+  const c       = contracts.find(x => x.id === _lsSigningContractId);
+  const lesseeSigned = c && !!c.signature;
+
+  const update = {
+    lessor_signature: dataUrl,
+    lessor_signed_at: now,
+    status: lesseeSigned ? 'signed' : 'pending'
+  };
+
+  const { error } = await sb.from('contracts').update(update).eq('id', _lsSigningContractId);
+  if (error) {
+    alert('Error saving signature: ' + error.message);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Confirm & Sign';
+    btn.disabled = false;
+    return;
+  }
+
+  // Update local contracts state
+  contracts = contracts.map(x => x.id === _lsSigningContractId
+    ? { ...x, ...update }
+    : x
+  );
+
+  closeLessorSignModal();
+  renderAll();
+  alert(lesseeSigned
+    ? '✓ Both parties have now signed. Contract is fully executed and locked.'
+    : '✓ Lessor signature saved. Contract will be locked once the lessee signs.'
+  );
+}
+
 function closeReturnModal() {
   document.getElementById('returnModalOverlay').classList.remove('open');
   document.body.style.overflow = '';
@@ -1730,6 +2051,54 @@ function copySuccessLink() {
   });
 }
 </script>
+<!-- ==================== LESSOR SIGN MODAL ==================== -->
+<div class="modal-overlay" id="lessorSignModalOverlay" onclick="if(event.target===this)closeLessorSignModal()">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;background:var(--accent);border-radius:50%;display:grid;place-items:center;color:white;font-size:12px;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        </div>
+        <h2>Sign as Lessor (Anirudh Ahlawat)</h2>
+      </div>
+      <button class="btn-icon" onclick="closeLessorSignModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ls-contractId">
+
+      <!-- Contract summary -->
+      <div style="background:var(--accent-light);border:1px solid var(--blue-border);border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+        <div style="font-weight:600;margin-bottom:4px;" id="ls-vehicleSummary"></div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:6px;">
+          <span>Lessee: <strong id="ls-lesseeName" style="color:var(--text)"></strong></span>
+          <span>Period: <strong id="ls-period" style="color:var(--text)"></strong></span>
+          <span>Rate: <strong id="ls-rate" style="color:var(--text)"></strong></span>
+        </div>
+        <div id="ls-awaitingNote" style="display:none;margin-top:8px;font-size:11px;color:var(--amber);font-weight:500;">
+          ⚠ Lessee has not yet signed. You can sign first — the contract will lock once both parties have signed.
+        </div>
+      </div>
+
+      <!-- Signature canvas -->
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;">Your Signature</div>
+      <div style="border:1px solid var(--border-strong);border-radius:6px;background:#fafafa;position:relative;">
+        <canvas id="ls-sigCanvas" width="480" height="160" style="display:block;width:100%;cursor:crosshair;border-radius:6px;touch-action:none;"></canvas>
+        <span style="position:absolute;bottom:8px;right:10px;font-size:10px;color:var(--text-light);pointer-events:none;">Sign above</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+        <button class="btn btn-outline btn-sm" onclick="clearLessorCanvas()">Clear</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeLessorSignModal()">Cancel</button>
+      <button id="ls-signBtn" class="btn btn-primary" onclick="saveLessorSignature()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        Confirm & Sign
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== RETURN VEHICLE MODAL ==================== -->
 <div class="modal-overlay" id="returnModalOverlay" onclick="if(event.target===this)closeReturnModal()">
   <div class="modal">

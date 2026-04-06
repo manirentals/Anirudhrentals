@@ -73,13 +73,11 @@ export default function SignContractPage({ params }: { params: { id: string } })
       setContract(data);
       setIsLoading(false);
     }
-
     fetchContract();
   }, [params.id]);
 
   const display = useMemo(() => {
     if (!contract) return null;
-
     return {
       lessorName:        contract.lessor_name     || "Anirudh Ahlawat",
       lessorAddress:     contract.lessor_address  || "36 Clearwater Rise Parade, Truganina VIC 3029",
@@ -110,7 +108,8 @@ export default function SignContractPage({ params }: { params: { id: string } })
       hoOdometer:        contract.ho_odometer || "_______________",
       hoFuel:            contract.ho_fuel     || "_______________",
       hoDamage:          contract.ho_damage   || "_______________",
-      lessorSignedDate:  formatSignedDate(contract.signed_at),
+      lessorSignature:   contract.lessor_signature || null,
+      lessorSignedDate:  formatSignedDate(contract.lessor_signed_at),
       lesseeSignedDate:  formatSignedDate(contract.signed_at),
     };
   }, [contract]);
@@ -118,12 +117,13 @@ export default function SignContractPage({ params }: { params: { id: string } })
   if (isLoading) {
     return <div style={{ padding: "80px 24px", textAlign: "center", fontFamily: "sans-serif" }}>Loading secure document...</div>;
   }
-
   if (error || !contract || !display) {
     return <div style={{ padding: "80px 24px", textAlign: "center", color: "#b91c1c", fontFamily: "sans-serif" }}>{error}</div>;
   }
 
-  const hasSigned = contract.status === "signed" && !!contract.signature;
+  const lesseeHasSigned = !!contract.signature;
+  const lessorHasSigned = !!contract.lessor_signature;
+  const isFullyLocked   = lesseeHasSigned && lessorHasSigned;
 
   return (
     <div className={sora.className}>
@@ -134,6 +134,14 @@ export default function SignContractPage({ params }: { params: { id: string } })
       {/* ── Toolbar ── */}
       <div className="toolbar">
         <span className="toolbar-title">Motor Vehicle Rental Agreement</span>
+        {isFullyLocked && (
+          <span className="toolbar-locked">
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style={{ marginRight: 5 }}>
+              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+            </svg>
+            Fully Executed
+          </span>
+        )}
       </div>
 
       <div className="pages">
@@ -141,13 +149,23 @@ export default function SignContractPage({ params }: { params: { id: string } })
         {/* ══ PAGE 1 ══ */}
         <div className="page">
           <div className="gold-bar" />
-
           <div className="doc-title">Motor Vehicle Rental Agreement</div>
           <div className="doc-subtitle">Private Arrangement — Victoria, Australia</div>
 
-          {hasSigned && (
-            <div className="signed-banner">
-              This agreement has been digitally signed and saved.
+          {/* Status banner */}
+          {isFullyLocked && (
+            <div className="banner banner-gold">
+              ✓ This agreement has been fully executed and digitally signed by both parties.
+            </div>
+          )}
+          {!isFullyLocked && lesseeHasSigned && (
+            <div className="banner banner-blue">
+              ✓ Signed by lessee. Awaiting lessor countersignature.
+            </div>
+          )}
+          {!isFullyLocked && lessorHasSigned && !lesseeHasSigned && (
+            <div className="banner banner-blue">
+              ✓ Signed by lessor. Please sign below to complete the agreement.
             </div>
           )}
 
@@ -173,18 +191,18 @@ export default function SignContractPage({ params }: { params: { id: string } })
               <Row label="Contact Number"      value={display.lessorPhone} />
 
               <SectionHeader>Lessee (Primary Driver)</SectionHeader>
-              <Row label="Full Name"             value={display.lesseeName} />
-              <Row label="Address"               value={display.lesseeAddress} />
-              <Row label="Email"                 value={display.lesseeEmail} />
-              <Row label="Phone Number"          value={display.lesseePhone} />
-              <Row label="Driver's Licence No."  value={display.lesseeLicence} />
+              <Row label="Full Name"                value={display.lesseeName} />
+              <Row label="Address"                  value={display.lesseeAddress} />
+              <Row label="Email"                    value={display.lesseeEmail} />
+              <Row label="Phone Number"             value={display.lesseePhone} />
+              <Row label="Driver's Licence No."     value={display.lesseeLicence} />
               <Row label="State / Country of Issue" value={display.lesseeState} />
-              <Row label="Licence Expiry Date"   value={display.lesseeExpiry} />
+              <Row label="Licence Expiry Date"      value={display.lesseeExpiry} />
 
               <SectionHeader>Emergency Contact</SectionHeader>
               <Row label="Emergency Contact Name" value={display.emergName} />
-              <Row label="Relationship"            value={display.emergRelationship} />
-              <Row label="Phone Number"            value={display.emergPhone} />
+              <Row label="Relationship"           value={display.emergRelationship} />
+              <Row label="Phone Number"           value={display.emergPhone} />
 
               <SectionHeader>Vehicle Details</SectionHeader>
               <Row label="Make"                value={display.vehicleMake} />
@@ -195,13 +213,13 @@ export default function SignContractPage({ params }: { params: { id: string } })
               <Row label="VIN"                 value={display.vehicleVin} />
 
               <SectionHeader>Rental Parameters</SectionHeader>
-              <Row label="Rental Commencement Date"  value={display.startDate} />
-              <Row label="Rental Expiry Date"        value={display.endDate} />
-              <Row label="Weekly Rental Rate"        value={display.rentalRate} />
-              <Row label="Security Bond"             value={display.bond} />
-              <Row label="Bond Due Date"             value={display.bondDueDate} />
+              <Row label="Rental Commencement Date"   value={display.startDate} />
+              <Row label="Rental Expiry Date"         value={display.endDate} />
+              <Row label="Weekly Rental Rate"         value={display.rentalRate} />
+              <Row label="Security Bond"              value={display.bond} />
+              <Row label="Bond Due Date"              value={display.bondDueDate} />
               <Row label="Damage Liability Fee (DLF)" value={display.dlf} />
-              <Row label="Insurance Excess Amount"   value={display.insuranceExcess} />
+              <Row label="Insurance Excess Amount"    value={display.insuranceExcess} />
 
               <SectionHeader>Vehicle Condition at Handover</SectionHeader>
               <Row label="Odometer Reading (kms)"  value={display.hoOdometer} />
@@ -216,7 +234,6 @@ export default function SignContractPage({ params }: { params: { id: string } })
         {/* ══ PAGE 2 ══ */}
         <div className="page">
           <div className="gold-bar" />
-
           <div className="sh" style={{ marginTop: 0 }}>3. &nbsp; Grant of Lease, Term, and Pricing</div>
           <p className="cl"><strong>3.1</strong> &nbsp; The Lessor grants the Lessee the right to possess and operate the Vehicle for the term specified in the Schedule, subject strictly to the terms of this Agreement.</p>
           <p className="cl"><strong>3.2</strong> &nbsp; The Lessee acknowledges that this Agreement constitutes a lease and bailment of the Vehicle. The Lessee obtains no legal or equitable title to the Vehicle.</p>
@@ -246,14 +263,12 @@ export default function SignContractPage({ params }: { params: { id: string } })
           <p className="cl"><strong>6.3 &nbsp; Lessee&apos;s Obligations:</strong> The Lessee is responsible for ongoing operational maintenance including weekly checks of engine oil levels, engine coolant levels, and tyre pressures, as well as maintaining adequate fuel or battery charge.</p>
           <p className="cl"><strong>6.4</strong> &nbsp; The Lessee must return the Vehicle in the same condition as documented at the Commencement Date, subject only to Fair Wear and Tear.</p>
           <p className="cl"><strong>6.5</strong> &nbsp; The Lessee must not authorise, commission, or undertake any mechanical repairs, aesthetic alterations, or component modifications to the Vehicle without the express prior written consent of the Lessor.</p>
-
           <div className="pf">Motor Vehicle Rental Agreement — Confidential — Governed by the Laws of Victoria, Australia — Page 2 of 4</div>
         </div>
 
         {/* ══ PAGE 3 ══ */}
         <div className="page">
           <div className="gold-bar" />
-
           <div className="sh" style={{ marginTop: 0 }}>7. &nbsp; Damage Liability</div>
           <p className="cl"><strong>7.1</strong> &nbsp; The Lessee is fully responsible for any loss or damage to the Vehicle during the rental period, regardless of fault, up to the Damage Liability Fee (DLF) stated in the Schedule.</p>
           <p className="cl"><strong>7.2</strong> &nbsp; The DLF limitation will be voided, and the Lessee will be fully liable for all repair costs, recovery costs, and loss of use, if damage or loss is causally linked to:</p>
@@ -309,7 +324,6 @@ export default function SignContractPage({ params }: { params: { id: string } })
         {/* ══ PAGE 4 — Execution ══ */}
         <div className="page">
           <div className="gold-bar" />
-
           <div className="sh" style={{ marginTop: 0 }}>Execution</div>
           <p className="exec-note">
             By signing below, both parties confirm they have read, understood, and agree to be bound by all terms of
@@ -317,13 +331,22 @@ export default function SignContractPage({ params }: { params: { id: string } })
           </p>
 
           <div className="sig-wrap">
-            {/* Lessor */}
+            {/* ── Lessor ── */}
             <div className="sig-col">
               <div className="sig-hdr">Lessor (Vehicle Owner)</div>
               <div className="sig-body">
                 <div className="sig-field">
                   <span className="sig-lbl">Signature</span>
-                  <span className="sig-line" />
+                  {lessorHasSigned ? (
+                    <img className="signed-image" src={display.lessorSignature!} alt="Lessor signature" />
+                  ) : (
+                    <div className="sig-awaiting">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginRight: 6 }}>
+                        <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                      </svg>
+                      Awaiting lessor signature
+                    </div>
+                  )}
                 </div>
                 <div className="sig-field">
                   <span className="sig-lbl">Full Name</span>
@@ -331,38 +354,49 @@ export default function SignContractPage({ params }: { params: { id: string } })
                 </div>
                 <div className="sig-field">
                   <span className="sig-lbl">Date</span>
-                  <span className="sig-val">{hasSigned ? display.lessorSignedDate : "_______________"}</span>
+                  <span className="sig-val">{lessorHasSigned ? display.lessorSignedDate : "_______________"}</span>
                 </div>
               </div>
             </div>
 
-            {/* Lessee */}
+            {/* ── Lessee ── */}
             <div className="sig-col">
               <div className="sig-hdr">Lessee (Primary Driver)</div>
               <div className="sig-body">
                 <div className="sig-field">
                   <span className="sig-lbl">Signature</span>
-                  {hasSigned ? (
+                  {lesseeHasSigned ? (
                     <img className="signed-image" src={contract.signature} alt="Lessee signature" />
-                  ) : (
+                  ) : isFullyLocked ? null : (
                     <SignaturePad
                       onSave={async (signatureDataUrl: string) => {
                         setIsSaving(true);
                         const timestamp = new Date().toISOString();
+                        // Lock only if lessor has already signed too
+                        const newStatus = lessorHasSigned ? "signed" : "pending";
                         await supabase
                           .from("contracts")
-                          .update({ signature: signatureDataUrl, signed_at: timestamp, status: "signed" })
+                          .update({
+                            signature: signatureDataUrl,
+                            signed_at: timestamp,
+                            status: newStatus,
+                          })
                           .eq("id", params.id);
                         setContract((prev: any) => ({
                           ...prev,
                           signature: signatureDataUrl,
                           signed_at: timestamp,
-                          status: "signed",
+                          status: newStatus,
                         }));
                         setIsSaving(false);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     />
+                  )}
+                  {!lesseeHasSigned && !isFullyLocked && (
+                    <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>
+                      Draw your signature above, then click &ldquo;Sign &amp; Complete&rdquo;
+                    </div>
                   )}
                 </div>
                 <div className="sig-field">
@@ -371,12 +405,18 @@ export default function SignContractPage({ params }: { params: { id: string } })
                 </div>
                 <div className="sig-field">
                   <span className="sig-lbl">Date</span>
-                  <span className="sig-val">{hasSigned ? display.lesseeSignedDate : "_______________"}</span>
+                  <span className="sig-val">{lesseeHasSigned ? display.lesseeSignedDate : "_______________"}</span>
                 </div>
-                {isSaving && <div className="sig-saving">Saving signature...</div>}
+                {isSaving && <div className="sig-saving">Saving signature…</div>}
               </div>
             </div>
           </div>
+
+          {isFullyLocked && (
+            <div style={{ marginTop: 20, padding: "10px 14px", background: "#FFFBEF", border: "1px solid #B08D2E", borderRadius: 4, fontSize: 11, color: "#1A1A1A", fontStyle: "italic" }}>
+              This agreement is fully executed. Both parties have digitally signed on the dates indicated above.
+            </div>
+          )}
 
           <div className="end-rule">
             <div className="end-line" />
@@ -390,292 +430,67 @@ export default function SignContractPage({ params }: { params: { id: string } })
       </div>{/* /.pages */}
 
       <style jsx>{`
-        /* ── Toolbar ── */
         .toolbar {
-          position: sticky;
-          top: 0;
-          z-index: 100;
+          position: sticky; top: 0; z-index: 100;
           background: #1A1A1A;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+          display: flex; align-items: center; justify-content: space-between;
           padding: 12px 28px;
         }
-        .toolbar-title {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: #D4AA4A;
-        }
+        .toolbar-title { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #D4AA4A; }
+        .toolbar-locked { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #B08D2E; display: flex; align-items: center; }
 
-        /* ── Page wrapper ── */
-        .pages {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 20px;
-          padding: 28px 16px 48px;
-        }
-        .page {
-          width: 794px;
-          min-height: 1123px;
-          background: #fff;
-          padding: 52px 56px 48px;
-          box-shadow: 0 3px 24px rgba(0,0,0,0.18);
-          display: flex;
-          flex-direction: column;
-          position: relative;
-        }
+        .pages { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 28px 16px 48px; }
+        .page { width: 794px; min-height: 1123px; background: #fff; padding: 52px 56px 48px; box-shadow: 0 3px 24px rgba(0,0,0,.18); display: flex; flex-direction: column; position: relative; }
 
-        /* ── Gold bar ── */
-        .gold-bar {
-          height: 4px;
-          background: linear-gradient(90deg, #B08D2E 0%, #D4AA4A 50%, #B08D2E 100%);
-          margin-bottom: 20px;
-        }
+        .gold-bar { height: 4px; background: linear-gradient(90deg,#B08D2E 0%,#D4AA4A 50%,#B08D2E 100%); margin-bottom: 20px; }
 
-        /* ── Title ── */
-        .doc-title {
-          font-size: 20px;
-          font-weight: 800;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          text-align: center;
-          color: #1A1A1A;
-          line-height: 1.2;
-          margin-bottom: 6px;
-        }
-        .doc-subtitle {
-          font-size: 12px;
-          font-weight: 300;
-          font-style: italic;
-          text-align: center;
-          color: #666;
-          padding-bottom: 10px;
-          border-bottom: 3px solid #B08D2E;
-          margin-bottom: 16px;
-        }
+        .doc-title { font-size: 20px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; text-align: center; color: #1A1A1A; line-height: 1.2; margin-bottom: 6px; }
+        .doc-subtitle { font-size: 12px; font-weight: 300; font-style: italic; text-align: center; color: #666; padding-bottom: 10px; border-bottom: 3px solid #B08D2E; margin-bottom: 16px; }
 
-        /* ── Signed banner ── */
-        .signed-banner {
-          margin-bottom: 16px;
-          border: 1px solid #B08D2E;
-          background: #FFFBEF;
-          color: #1A1A1A;
-          padding: 10px 14px;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 500;
-        }
+        .banner { margin-bottom: 16px; padding: 10px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .banner-gold { border: 1px solid #B08D2E; background: #FFFBEF; color: #1A1A1A; }
+        .banner-blue { border: 1px solid #bfdbfe; background: #eff6ff; color: #1d4ed8; }
 
-        /* ── Preamble ── */
-        .preamble {
-          font-size: 11.5px;
-          line-height: 1.7;
-          color: #3A3A3A;
-          margin-bottom: 16px;
-        }
+        .preamble { font-size: 11.5px; line-height: 1.7; color: #3A3A3A; margin-bottom: 16px; }
 
-        /* ── Section headings ── */
-        .sh {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: #1A1A1A;
-          padding-bottom: 5px;
-          border-bottom: 2px solid #B08D2E;
-          margin-top: 18px;
-          margin-bottom: 9px;
-        }
+        .sh { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #1A1A1A; padding-bottom: 5px; border-bottom: 2px solid #B08D2E; margin-top: 18px; margin-bottom: 9px; }
+        .cl { font-size: 11px; line-height: 1.72; color: #1A1A1A; margin-bottom: 5px; }
+        .sc { font-size: 11px; line-height: 1.72; color: #1A1A1A; margin-bottom: 4px; padding-left: 22px; }
 
-        /* ── Clause text ── */
-        .cl {
-          font-size: 11px;
-          line-height: 1.72;
-          color: #1A1A1A;
-          margin-bottom: 5px;
-        }
-        .sc {
-          font-size: 11px;
-          line-height: 1.72;
-          color: #1A1A1A;
-          margin-bottom: 4px;
-          padding-left: 22px;
-        }
+        .sched { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 4px; font-size: 11px; }
+        :global(.sched .gh) { background: #2C2C2C; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 6px 10px; }
+        :global(.sched td) { border: 1px solid #DDD; padding: 0; vertical-align: middle; }
+        :global(.sched .lbl) { background: #F2EAD0; font-size: 10px; font-weight: 600; color: #1A1A1A; padding: 5px 9px; white-space: nowrap; width: 36%; }
+        :global(.sched .val) { background: #fff; padding: 5px 8px; font-size: 11px; color: #1A1A1A; }
+        :global(.sched .val.empty) { color: #AAA; font-style: italic; }
+        :global(.sched tr:nth-child(even) .val) { background: #F7F7F7; }
 
-        /* ── Schedule table ── */
-        .sched {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 8px;
-          margin-bottom: 4px;
-          font-size: 11px;
-        }
-        :global(.sched .gh) {
-          background: #2C2C2C;
-          color: #fff;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 6px 10px;
-        }
-        :global(.sched td) {
-          border: 1px solid #DDD;
-          padding: 0;
-          vertical-align: middle;
-        }
-        :global(.sched .lbl) {
-          background: #F2EAD0;
-          font-size: 10px;
-          font-weight: 600;
-          color: #1A1A1A;
-          padding: 5px 9px;
-          white-space: nowrap;
-          width: 36%;
-        }
-        :global(.sched .val) {
-          background: #fff;
-          padding: 5px 8px;
-          font-size: 11px;
-          color: #1A1A1A;
-        }
-        :global(.sched .val.empty) {
-          color: #AAA;
-          font-style: italic;
-        }
-        :global(.sched tr:nth-child(even) .val) {
-          background: #F7F7F7;
-        }
+        .sig-wrap { display: flex; gap: 20px; margin-top: 14px; }
+        .sig-col { flex: 1; display: flex; flex-direction: column; }
+        .sig-hdr { background: #2C2C2C; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 7px 10px; }
+        .sig-body { border: 1px solid #DDD; border-top: none; padding: 14px 12px; display: flex; flex-direction: column; gap: 16px; }
+        .sig-field { display: flex; flex-direction: column; gap: 4px; }
+        .sig-lbl { font-size: 9px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #666; }
+        .sig-line { border-bottom: 1px solid #1A1A1A; height: 32px; width: 100%; }
+        .sig-val { font-size: 11px; color: #1A1A1A; font-weight: 500; padding: 4px 0 0; }
+        .sig-saving { font-size: 11px; color: #666; }
+        .sig-awaiting { display: flex; align-items: center; height: 50px; font-size: 10px; color: #AAA; font-style: italic; border: 1px dashed #DDD; border-radius: 3px; padding: 0 10px; }
+        .signed-image { display: block; width: 100%; height: 80px; object-fit: contain; background: #fff; border: 1px solid #DDD; border-radius: 2px; }
 
-        /* ── Signature block ── */
-        .sig-wrap {
-          display: flex;
-          gap: 20px;
-          margin-top: 14px;
-        }
-        .sig-col {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-        .sig-hdr {
-          background: #2C2C2C;
-          color: #fff;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 7px 10px;
-        }
-        .sig-body {
-          border: 1px solid #DDD;
-          border-top: none;
-          padding: 14px 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .sig-field {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .sig-lbl {
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-          color: #666;
-        }
-        .sig-line {
-          border-bottom: 1px solid #1A1A1A;
-          height: 32px;
-          width: 100%;
-        }
-        .sig-val {
-          font-size: 11px;
-          color: #1A1A1A;
-          font-weight: 500;
-          padding: 4px 0 0;
-        }
-        .signed-image {
-          display: block;
-          width: 100%;
-          height: 80px;
-          object-fit: contain;
-          background: #fff;
-          border: 1px solid #DDD;
-          border-radius: 2px;
-        }
-        .sig-saving {
-          font-size: 11px;
-          color: #666;
-        }
+        .exec-note { font-size: 10.5px; font-style: italic; color: #666; line-height: 1.65; margin-bottom: 14px; }
 
-        /* ── Exec note ── */
-        .exec-note {
-          font-size: 10.5px;
-          font-style: italic;
-          color: #666;
-          line-height: 1.65;
-          margin-bottom: 14px;
-        }
+        .end-rule { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 36px; }
+        .end-line { flex: 1; height: 1px; background: #B08D2E; max-width: 80px; }
+        .end-txt { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #B08D2E; }
 
-        /* ── End rule ── */
-        .end-rule {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          justify-content: center;
-          margin-top: 36px;
-        }
-        .end-line {
-          flex: 1;
-          height: 1px;
-          background: #B08D2E;
-          max-width: 80px;
-        }
-        .end-txt {
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #B08D2E;
-        }
+        .pf { margin-top: auto; padding-top: 8px; border-top: 1px solid #DDD; text-align: center; font-size: 8px; color: #AAA; letter-spacing: .05em; }
 
-        /* ── Page footer ── */
-        .pf {
-          margin-top: auto;
-          padding-top: 8px;
-          border-top: 1px solid #DDD;
-          text-align: center;
-          font-size: 8px;
-          color: #AAA;
-          letter-spacing: 0.05em;
-        }
+        :global(.sigCanvas) { border: 1px solid #DDD; border-radius: 2px; background: #fff; }
 
-        :global(.sigCanvas) {
-          border: 1px solid #DDD;
-          border-radius: 2px;
-          background: #fff;
-        }
-
-        /* ── Mobile ── */
         @media (max-width: 860px) {
-          .page {
-            width: 100%;
-            min-height: unset;
-            padding: 28px 20px;
-          }
-          .pages {
-            padding: 16px 8px 40px;
-          }
-          .sig-wrap {
-            flex-direction: column;
-          }
+          .page { width: 100%; min-height: unset; padding: 28px 20px; }
+          .pages { padding: 16px 8px 40px; }
+          .sig-wrap { flex-direction: column; }
         }
       `}</style>
     </div>
