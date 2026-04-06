@@ -20,6 +20,16 @@ export async function POST(req: Request) {
 
     // ── Resend-only path: contract already updated by client, just send email ──
     if (data.updateId) {
+      // Verify contract exists before sending email
+      const { data: existing, error: lookupErr } = await supabase
+        .from('contracts')
+        .select('id')
+        .eq('id', data.updateId)
+        .single();
+      if (lookupErr || !existing) {
+        return NextResponse.json({ error: 'Contract not found.' }, { status: 404, headers: corsHeaders });
+      }
+
       const baseUrl  = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const signLink = `${baseUrl}/sign/${data.updateId}`;
 

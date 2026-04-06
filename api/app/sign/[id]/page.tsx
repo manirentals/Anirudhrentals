@@ -82,6 +82,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
       lessorName:        contract.lessor_name     || "Anirudh Ahlawat",
       lessorAddress:     contract.lessor_address  || "36 Clearwater Rise Parade, Truganina VIC 3029",
       lessorPhone:       contract.lessor_phone    || "0401 991 420",
+      lessorEmail:       contract.lessor_email    || "_______________",
       lesseeName:        contract.client_name     || "_______________",
       lesseeAddress:     contract.client_address  || "_______________",
       lesseeEmail:       contract.client_email    || "_______________",
@@ -183,18 +184,18 @@ export default function SignContractPage({ params }: { params: { id: string } })
           <p className="cl"><strong>1.5 &nbsp; Vehicle</strong> means the motor vehicle described in the Schedule, including all keys, remote entry devices, accessories, tools, tyres, and equipment supplied with it.</p>
 
           <div className="sh">2. &nbsp; Schedule of Details</div>
+          <p className="cl" style={{ marginBottom: 8 }}>Complete all fields below. Leave no field blank &mdash; write &ldquo;N/A&rdquo; where not applicable.</p>
           <table className="sched">
             <tbody>
               <SectionHeader>Lessor (Vehicle Owner)</SectionHeader>
               <Row label="Full Name / Company" value={display.lessorName} />
               <Row label="Address"             value={display.lessorAddress} />
               <Row label="Contact Number"      value={display.lessorPhone} />
+              <Row label="Email Address"       value={display.lessorEmail} />
 
               <SectionHeader>Lessee (Primary Driver)</SectionHeader>
               <Row label="Full Name"                value={display.lesseeName} />
               <Row label="Address"                  value={display.lesseeAddress} />
-              <Row label="Email"                    value={display.lesseeEmail} />
-              <Row label="Phone Number"             value={display.lesseePhone} />
               <Row label="Driver's Licence No."     value={display.lesseeLicence} />
               <Row label="State / Country of Issue" value={display.lesseeState} />
               <Row label="Licence Expiry Date"      value={display.lesseeExpiry} />
@@ -259,7 +260,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
 
           <div className="sh">6. &nbsp; Maintenance, Repairs, and Condition</div>
           <p className="cl"><strong>6.1</strong> &nbsp; The Lessor warrants that, at the Commencement Date, the Vehicle is roadworthy, structurally sound, and mechanically fit for its intended purpose.</p>
-          <p className="cl"><strong>6.2 &nbsp; Lessor&apos;s Obligations:</strong> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing. The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
+          <p className="cl"><strong>6.2 &nbsp; Lessor&apos;s Obligations:</strong> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing (including routine servicing). The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
           <p className="cl"><strong>6.3 &nbsp; Lessee&apos;s Obligations:</strong> The Lessee is responsible for ongoing operational maintenance including weekly checks of engine oil levels, engine coolant levels, and tyre pressures, as well as maintaining adequate fuel or battery charge.</p>
           <p className="cl"><strong>6.4</strong> &nbsp; The Lessee must return the Vehicle in the same condition as documented at the Commencement Date, subject only to Fair Wear and Tear.</p>
           <p className="cl"><strong>6.5</strong> &nbsp; The Lessee must not authorise, commission, or undertake any mechanical repairs, aesthetic alterations, or component modifications to the Vehicle without the express prior written consent of the Lessor.</p>
@@ -371,9 +372,24 @@ export default function SignContractPage({ params }: { params: { id: string } })
                     <SignaturePad
                       onSave={async (signatureDataUrl: string) => {
                         setIsSaving(true);
+                        // Re-fetch current contract state to avoid race conditions
+                        const { data: fresh } = await supabase
+                          .from("contracts")
+                          .select("signature, lessor_signature, status")
+                          .eq("id", params.id)
+                          .single();
+                        if (fresh?.signature) {
+                          alert("This contract has already been signed by the lessee.");
+                          setIsSaving(false);
+                          return;
+                        }
+                        if (fresh?.status === "signed") {
+                          alert("This contract is already fully executed.");
+                          setIsSaving(false);
+                          return;
+                        }
                         const timestamp = new Date().toISOString();
-                        // Lock only if lessor has already signed too
-                        const newStatus = lessorHasSigned ? "signed" : "pending";
+                        const newStatus = fresh?.lessor_signature ? "signed" : "pending";
                         await supabase
                           .from("contracts")
                           .update({
@@ -387,6 +403,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
                           signature: signatureDataUrl,
                           signed_at: timestamp,
                           status: newStatus,
+                          lessor_signature: fresh?.lessor_signature || prev.lessor_signature,
                         }));
                         setIsSaving(false);
                         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -491,6 +508,39 @@ export default function SignContractPage({ params }: { params: { id: string } })
           .page { width: 100%; min-height: unset; padding: 28px 20px; }
           .pages { padding: 16px 8px 40px; }
           .sig-wrap { flex-direction: column; }
+        }
+        @media (max-width: 600px) {
+          .pages { padding: 12px 4px 32px; }
+          .page { padding: 20px 12px; }
+          .toolbar { padding: 10px 14px; }
+          .toolbar-title { font-size: 9px; }
+          .doc-title { font-size: 16px; letter-spacing: .08em; }
+          .doc-subtitle { font-size: 10px; }
+          .sh { font-size: 10px; padding: 5px 8px; padding-bottom: 4px; }
+          .cl { font-size: 10.5px; }
+          .sc { font-size: 10.5px; padding-left: 16px; }
+          .preamble { font-size: 10.5px; }
+          :global(.sched .lbl) { white-space: normal; width: 40%; font-size: 9.5px; }
+          :global(.sched td) { padding: 4px 6px; }
+          :global(.sched .val) { font-size: 10px; }
+          .sig-box { padding: 12px; }
+          .sig-hdr { font-size: 9px; padding: 6px 8px; }
+          .sig-body { padding: 10px 8px; gap: 12px; }
+          .sig-lbl { font-size: 8px; }
+          .sig-val { font-size: 10px; }
+          .exec-note { font-size: 9.5px; }
+          .banner { font-size: 10px; padding: 8px 10px; }
+          .pf { font-size: 7px; }
+        }
+        @media (max-width: 400px) {
+          .pages { padding: 8px 2px 24px; }
+          .page { padding: 16px 8px; }
+          .doc-title { font-size: 14px; letter-spacing: .06em; }
+          :global(.sched .lbl) { width: 42%; font-size: 9px; }
+          :global(.sched .val) { font-size: 9.5px; }
+          :global(.sched td) { padding: 3px 5px; }
+          .cl { font-size: 10px; }
+          .sc { font-size: 10px; }
         }
       `}</style>
     </div>

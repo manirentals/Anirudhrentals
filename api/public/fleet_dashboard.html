@@ -49,6 +49,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .nav-tab { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; transition: all 0.18s; letter-spacing: 0.01em; }
 .nav-tab:hover { background: var(--accent-light); color: var(--accent); }
 .nav-tab.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+.nav-mobile { display: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; }
 
 /* ── LAYOUT ── */
 .page { max-width: 1240px; margin: 0 auto; padding: 28px 32px 80px; }
@@ -175,7 +176,28 @@ tbody tr:hover { background: #f8fbff; }
 }
 @media (max-width: 768px) {
   .nav-tabs { display: none; }
-  .nav-mobile { display: flex; }
+  .nav-mobile { display: block; }
+  .hide-mobile { display: none; }
+}
+@media (max-width: 600px) {
+  .stats { grid-template-columns: 1fr; }
+  .page { padding: 16px 8px 40px; }
+  .modal-overlay { padding: 16px 8px; }
+  .modal { padding: 0; border-radius: 10px; }
+  .modal-head { padding: 14px 16px; }
+  .modal-body { padding: 16px; }
+  .modal-foot { padding: 12px 16px; flex-wrap: wrap; }
+  .modal-foot .btn { flex: 1; min-width: 0; justify-content: center; font-size: 12px; padding: 10px 10px; }
+  .btn-icon { width: 38px; height: 38px; min-width: 38px; }
+  .form-grid { gap: 10px; }
+  th, td { padding: 10px 8px; font-size: 12px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 10px; }
+  .action-grid { width: 100%; grid-template-columns: 1fr 1fr; }
+  .nav { padding: 0 12px; height: 52px; }
+  .nav-brand-text { font-size: 13px; }
+  .section-title { font-size: 15px; }
+  .section-header { flex-direction: column; gap: 10px; align-items: flex-start; }
 }
 
 /* ── REGO STRIP ── */
@@ -214,11 +236,17 @@ tbody tr:hover { background: #f8fbff; }
     </div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
-    <button class="nav-tab" onclick="switchTab('expenses')">Outgoings</button>
-    <button class="nav-tab" onclick="switchTab('pnl')">P&amp;L</button>
-    <button class="nav-tab" onclick="switchTab('contracts')">Contracts</button>
+    <button class="nav-tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+    <button class="nav-tab" data-tab="expenses" onclick="switchTab('expenses')">Outgoings</button>
+    <button class="nav-tab" data-tab="pnl" onclick="switchTab('pnl')">P&amp;L</button>
+    <button class="nav-tab" data-tab="contracts" onclick="switchTab('contracts')">Contracts</button>
   </div>
+  <select class="nav-mobile" onchange="switchTab(this.value)">
+    <option value="overview">Overview</option>
+    <option value="expenses">Outgoings</option>
+    <option value="pnl">P&amp;L</option>
+    <option value="contracts">Contracts</option>
+  </select>
 </div>
 
 <div class="page">
@@ -243,10 +271,10 @@ tbody tr:hover { background: #f8fbff; }
         <thead>
           <tr>
             <th>Vehicle</th>
-            <th>Rego</th>
+            <th class="hide-mobile">Rego</th>
             <th>Current Lessee</th>
-            <th>Weekly Rent</th>
-            <th>Bond Held</th>
+            <th class="hide-mobile">Weekly Rent</th>
+            <th class="hide-mobile">Bond Held</th>
             <th>Status</th>
             <th style="width:100px">Actions</th>
           </tr>
@@ -282,7 +310,7 @@ tbody tr:hover { background: #f8fbff; }
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Vehicle</th><th>Category</th><th>Description</th><th>Amount</th><th style="width:60px"></th></tr></thead>
+        <thead><tr><th>Date</th><th>Vehicle</th><th>Category</th><th class="hide-mobile">Description</th><th>Amount</th><th style="width:60px"></th></tr></thead>
         <tbody id="expenseTableBody"></tbody>
       </table>
       <div id="emptyExpenses" class="empty-state" style="display:none;">
@@ -317,10 +345,10 @@ tbody tr:hover { background: #f8fbff; }
           <tr>
             <th>Vehicle</th>
             <th>Lessee</th>
-            <th>Sent</th>
-            <th>Lease Period</th>
+            <th class="hide-mobile">Sent</th>
+            <th class="hide-mobile">Lease Period</th>
             <th>Status</th>
-            <th>Signatures</th>
+            <th class="hide-mobile">Signatures</th>
             <th style="width:140px">Actions</th>
           </tr>
         </thead>
@@ -727,7 +755,12 @@ function switchTab(tab) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+  // Highlight the correct desktop tab by data-tab attribute
+  const matchTab = document.querySelector(`.nav-tab[data-tab="${tab}"]`);
+  if (matchTab) matchTab.classList.add('active');
+  // Sync mobile dropdown
+  const mobileNav = document.querySelector('.nav-mobile');
+  if (mobileNav) mobileNav.value = tab;
   if (tab === 'pnl') renderPnL();
   if (tab === 'expenses') renderExpenses();
   if (tab === 'contracts') renderContracts();
@@ -805,7 +838,7 @@ function renderVehicles() {
           </div>
         </div>
       </td>
-      <td style="vertical-align: top; padding-top: 14px;">
+      <td class="hide-mobile" style="vertical-align: top; padding-top: 14px;">
         <div style="font-weight:600; text-transform:uppercase; margin-bottom: 2px;">${v.rego || '—'}</div>
         ${v.regoExpiry ? (() => {
           const expDate = new Date(v.regoExpiry + 'T00:00:00');
@@ -829,8 +862,8 @@ function renderVehicles() {
           </button>
         ` : ''}
       </td>
-      <td style="font-weight:600">${v.rate ? '$' + parseFloat(v.rate).toFixed(0) : '—'}</td>
-      <td>${v.bond ? '$' + parseFloat(v.bond).toFixed(0) : '—'}</td>
+      <td class="hide-mobile" style="font-weight:600">${v.rate ? '$' + parseFloat(v.rate).toFixed(0) : '—'}</td>
+      <td class="hide-mobile">${v.bond ? '$' + parseFloat(v.bond).toFixed(0) : '—'}</td>
       <td><span class="badge badge-${v.status}">${v.status}</span></td>
       <td>
         <button class="btn-action btn-contract" title="Send Contract" onclick="openContractModal('${v.id}')" style="width: 140px;">
@@ -997,7 +1030,7 @@ function renderExpenses() {
         <td style="color:var(--text-muted)">${fmtDate}</td>
         <td style="font-weight:500">${vLabel}</td>
         <td><span style="text-transform:capitalize">${e.category}</span></td>
-        <td style="color:var(--text-muted)">${e.desc || '—'}</td>
+        <td class="hide-mobile" style="color:var(--text-muted)">${e.desc || '—'}</td>
         <td style="font-weight:600; color:var(--red)">$${parseFloat(e.amount).toFixed(2)}</td>
         <td><button class="btn-icon" onclick="deleteExpense('${e.id}')" style="color:var(--red);" title="Delete">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1097,13 +1130,16 @@ function renderContracts() {
   tbody.innerHTML = contracts.map(c => {
     const fmtDate     = new Date(c.created_at).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
     const signLink    = `${API_URL}/sign/${c.id}`;
-    const lesseeSig   = !!c.signature;
+    const isExternal  = !!c.external_link || c.signature === 'EXTERNAL';
+    const lesseeSig   = !isExternal && !!c.signature;
     const lessorSig   = !!c.lessor_signature;
-    const bothSigned  = lesseeSig && lessorSig;
+    const bothSigned  = isExternal ? true : (lesseeSig && lessorSig);
 
     // Status badge
     let statusBadge;
-    if (bothSigned) {
+    if (isExternal) {
+      statusBadge = '<span class="badge" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">External</span>';
+    } else if (bothSigned) {
       statusBadge = '<span class="badge badge-signed">Signed</span>';
     } else if (lesseeSig) {
       statusBadge = '<span class="badge" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">Awaiting Lessor</span>';
@@ -1176,10 +1212,10 @@ function renderContracts() {
           <div style="font-weight:500">${c.client_name}</div>
           <div style="font-size:11px;color:var(--text-muted)">${c.client_email || ''}</div>
         </td>
-        <td style="color:var(--text-muted)">${fmtDate}</td>
-        <td style="font-size:12px">${c.start_date || '—'} → ${c.end_date || '—'}</td>
+        <td class="hide-mobile" style="color:var(--text-muted)">${fmtDate}</td>
+        <td class="hide-mobile" style="font-size:12px">${c.start_date || '—'} → ${c.end_date || '—'}</td>
         <td>${statusBadge}</td>
-        <td>${sigCol}</td>
+        <td class="hide-mobile">${sigCol}</td>
         <td>${actions}</td>
       </tr>`;
   }).join('');
@@ -1656,17 +1692,17 @@ body{background:#D6D1C7;font-family:'Sora',sans-serif;color:var(--dark);}
   <p class="cl">1.5 &nbsp; <strong>Vehicle</strong> means the motor vehicle described in the Schedule, including all keys, remote entry devices, accessories, tools, tyres, and equipment supplied with it.</p>
 
   <div class="sh">2. &nbsp; Schedule of Details</div>
+  <p class="cl" style="margin-bottom:8px;">Complete all fields below. Leave no field blank &mdash; write &ldquo;N/A&rdquo; where not applicable.</p>
   <table class="sched">
     <tr><td colspan="2" class="gh">Lessor (Vehicle Owner)</td></tr>
     <tr><td class="lbl">Full Name / Company</td><td class="val">Anirudh Ahlawat</td></tr>
     <tr><td class="lbl">Address</td><td class="val">36 Clearwater Rise Parade, Truganina VIC 3029</td></tr>
     <tr><td class="lbl">Contact Number</td><td class="val">0401 991 420</td></tr>
+    <tr><td class="lbl">Email Address</td><td class="val">anirudhahlawat@icloud.com</td></tr>
 
     <tr><td colspan="2" class="gh">Lessee (Primary Driver)</td></tr>
     <tr><td class="lbl">Full Name</td><td class="val">${clientName}</td></tr>
     <tr><td class="lbl">Address</td><td class="val">${clientAddress}</td></tr>
-    <tr><td class="lbl">Email</td><td class="val">${clientEmail}</td></tr>
-    <tr><td class="lbl">Phone Number</td><td class="val">${clientPhone}</td></tr>
     <tr><td class="lbl">Driver&rsquo;s Licence No.</td><td class="val">${clientLicence}</td></tr>
     <tr><td class="lbl">State / Country of Issue</td><td class="val">${clientState}</td></tr>
     <tr><td class="lbl">Licence Expiry Date</td><td class="val">${clientExpiry}</td></tr>
@@ -1729,7 +1765,7 @@ body{background:#D6D1C7;font-family:'Sora',sans-serif;color:var(--dark);}
 
   <div class="sh">6. &nbsp; Maintenance, Repairs, and Condition</div>
   <p class="cl">6.1 &nbsp; The Lessor warrants that, at the Commencement Date, the Vehicle is roadworthy, structurally sound, and mechanically fit for its intended purpose.</p>
-  <p class="cl">6.2 &nbsp; <strong>Lessor&rsquo;s Obligations:</strong> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing. The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
+  <p class="cl">6.2 &nbsp; <strong>Lessor&rsquo;s Obligations:</strong> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing (including routine servicing). The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
   <p class="cl">6.3 &nbsp; <strong>Lessee&rsquo;s Obligations:</strong> The Lessee is responsible for ongoing operational maintenance including weekly checks of engine oil levels, engine coolant levels, and tyre pressures, as well as maintaining adequate fuel or battery charge.</p>
   <p class="cl">6.4 &nbsp; The Lessee must return the Vehicle in the same condition as documented at the Commencement Date, subject only to Fair Wear and Tear.</p>
   <p class="cl">6.5 &nbsp; The Lessee must not authorise, commission, or undertake any mechanical repairs, aesthetic alterations, or component modifications to the Vehicle without the express prior written consent of the Lessor.</p>
@@ -2156,10 +2192,25 @@ async function saveLessorSignature() {
   const btn = document.getElementById('ls-signBtn');
   btn.textContent = 'Saving…'; btn.disabled = true;
 
+  // Re-fetch current contract state to avoid race conditions
+  const { data: fresh, error: fetchErr } = await sb.from('contracts').select('signature, lessor_signature, status').eq('id', _lsSigningContractId).single();
+  if (fetchErr) {
+    alert('Error fetching contract: ' + fetchErr.message);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Confirm & Sign';
+    btn.disabled = false;
+    return;
+  }
+  if (fresh.lessor_signature) {
+    alert('This contract has already been signed by the lessor.');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:-2px;"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> Confirm & Sign';
+    btn.disabled = false;
+    closeLessorSignModal();
+    return;
+  }
+
   const dataUrl = _lsCanvas.toDataURL('image/png');
   const now     = new Date().toISOString();
-  const c       = contracts.find(x => x.id === _lsSigningContractId);
-  const lesseeSigned = c && !!c.signature;
+  const lesseeSigned = !!fresh.signature;
 
   const update = {
     lessor_signature: dataUrl,
