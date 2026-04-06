@@ -87,6 +87,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
       lesseeName:        contract.client_name     || "_______________",
       lesseeAddress:     contract.client_address  || "_______________",
       lesseeEmail:       contract.client_email    || "_______________",
+      lesseePhone:       contract.client_phone    || "_______________",
       lesseeLicence:     contract.client_licence  || "_______________",
       lesseeState:       contract.client_state    || "_______________",
       lesseeExpiry:      formatDisplayDate(contract.client_expiry),
@@ -175,6 +176,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
               <Row label="Full Name"             value={display.lesseeName} />
               <Row label="Address"               value={display.lesseeAddress} />
               <Row label="Email"                 value={display.lesseeEmail} />
+              <Row label="Phone Number"          value={display.lesseePhone} />
               <Row label="Driver's Licence No."  value={display.lesseeLicence} />
               <Row label="State / Country of Issue" value={display.lesseeState} />
               <Row label="Licence Expiry Date"   value={display.lesseeExpiry} />

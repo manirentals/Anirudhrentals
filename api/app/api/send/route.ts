@@ -29,6 +29,7 @@ export async function POST(req: Request) {
 
           client_name: data.clientName,
           client_email: data.clientEmail,
+          client_phone: data.clientPhone || null,
           client_address: data.clientAddress,
           client_licence: data.clientLicence,
           client_state: data.clientState,
