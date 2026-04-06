@@ -135,28 +135,11 @@ export default function SignContractPage({ params }: { params: { id: string } })
 
           <div className="clause">
             <div className="clause-title">1. Definitions and Interpretation</div>
-            <p>
-              <strong>1.1</strong> <em>ACL</em> means the Australian Consumer Law as set out in Schedule 2 of the
-              Competition and Consumer Act 2010 (Cth).
-            </p>
-            <p>
-              <strong>1.2</strong> <em>Damage Liability Fee (DLF)</em> means the maximum predetermined amount the
-              Lessee is contractually liable to pay per incident in the event of loss or damage to the Vehicle,
-              provided there has been no Material Breach of this Agreement.
-            </p>
-            <p>
-              <strong>1.3</strong> <em>Fair Wear and Tear</em> means the objective standard of acceptable vehicle
-              deterioration resulting from normal, reasonable use, as defined by the most current edition of the AFIA
-              Fair Wear and Tear Guide.
-            </p>
-            <p>
-              <strong>1.4</strong> <em>PPSA</em> means the Personal Property Securities Act 2009 (Cth) and associated
-              regulations.
-            </p>
-            <p>
-              <strong>1.5</strong> <em>Vehicle</em> means the motor vehicle described in the Schedule, including all
-              keys, remote entry devices, accessories, tools, tyres, and equipment supplied with it.
-            </p>
+            <p><strong>1.1 ACL</strong> means the Australian Consumer Law as set out in Schedule 2 of the Competition and Consumer Act 2010 (Cth).</p>
+            <p><strong>1.2 Damage Liability Fee (DLF)</strong> means the maximum predetermined amount the Lessee is contractually liable to pay per incident in the event of loss or damage to the Vehicle, provided there has been no Material Breach of this Agreement.</p>
+            <p><strong>1.3 Fair Wear and Tear</strong> means the objective standard of acceptable vehicle deterioration resulting from normal, reasonable use.</p>
+            <p><strong>1.4 PPSA</strong> means the Personal Property Securities Act 2009 (Cth) and associated regulations.</p>
+            <p><strong>1.5 Vehicle</strong> means the motor vehicle described in the Schedule, including all keys, remote entry devices, accessories, tools, tyres, and equipment supplied with it.</p>
           </div>
 
           <div className="schedule-title">2. Schedule of Details</div>
@@ -177,7 +160,7 @@ export default function SignContractPage({ params }: { params: { id: string } })
 
               <tr className="section-row"><td colSpan={2}>Vehicle Details</td></tr>
               <tr><td>Make / Model</td><td><FieldValue value={display.vehicleMake} /></td></tr>
-              <tr><td>Year / Colour</td><td><FieldValue value={display.vehicleYear} /></td></tr>
+              <tr><td>Year</td><td><FieldValue value={display.vehicleYear} /></td></tr>
               <tr><td>Registration Number</td><td><FieldValue value={display.vehicleRego} /></td></tr>
               <tr><td>VIN</td><td><FieldValue value={display.vehicleVin} /></td></tr>
 
@@ -195,115 +178,55 @@ export default function SignContractPage({ params }: { params: { id: string } })
             <p><strong>3.1</strong> The Lessor grants the Lessee the right to possess and operate the Vehicle for the term specified in the Schedule, subject strictly to the terms of this Agreement.</p>
             <p><strong>3.2</strong> The Lessee acknowledges that this Agreement constitutes a lease and bailment of the Vehicle. The Lessee obtains no legal or equitable title to the Vehicle.</p>
             <p><strong>3.3</strong> If the Lessee retains possession of the Vehicle beyond the Rental Expiry Date without express written consent of the Lessor, the Lessee will be charged at the prevailing daily pro-rata rate. Following 48 hours of unauthorised retention, the Lessor reserves the right to report the Vehicle as stolen to relevant law enforcement agencies.</p>
-            <p><strong>3.4</strong> The Rental Rate stated in the Schedule is component-inclusive (base hire, GST, and standard overheads) but expressly excludes tolls, traffic infringements, and damage liabilities, which are contingent on Lessee behaviour.</p>
+            <p><strong>3.4</strong> The Rental Rate stated in the Schedule is component-inclusive (base hire and standard overheads) but expressly excludes tolls, traffic infringements, and damage liabilities.</p>
           </div>
 
           <div className="clause">
-            <div className="clause-title">4. Asset Security and the PPSA</div>
-            <p><strong>4.1</strong> The Lessee acknowledges and agrees that this Agreement may constitute a "PPS Lease" and thereby creates a statutory security interest in the Vehicle under the PPSA.</p>
-            <p><strong>4.2</strong> The Lessee irrevocably consents to the Lessor registering a Purchase Money Security Interest (PMSI) or standard security interest on the national PPSR against the Lessee&apos;s details and the Vehicle&apos;s VIN.</p>
-            <p><strong>4.3</strong> The Lessee agrees to sign any further documents required by the Lessor to ensure the security interest is perfected and retains the highest possible priority against third-party creditors or liquidators.</p>
-            <p><strong>4.4</strong> The Lessee must not attempt to sell, sublease, pledge, or create any competing security interest over the Vehicle.</p>
-            <p><strong>4.5</strong> To the maximum extent permitted by law, the Lessee waives their right to receive any notice of a verification statement regarding a registration event under section 157 of the PPSA.</p>
+            <div className="clause-title">4. Authorised Use and Jurisdictional Compliance</div>
+            <p><strong>4.1</strong> The Vehicle must only be driven by the Lessee or additional drivers formally authorised in writing by the Lessor. All drivers must hold a valid, unexpired, and unrestricted driving licence applicable to the class of the Vehicle.</p>
+            <p><strong>4.2</strong> The Lessee must strictly comply with all statutory road rules, traffic laws, and mobile phone restrictions (VIC) or state-applicable laws.</p>
+            <p><strong>4.3</strong> The Lessee must not, and must not allow the Vehicle to be: (a) used for any illegal purpose; (b) used for racing or speed testing; (c) used to transport hazardous materials; (d) driven under the influence of alcohol or drugs; (e) driven if unsafe; (f) used for towing without consent.</p>
+            <p><strong>4.4</strong> The Vehicle is strictly a non-smoking and no-pets environment. A cleaning fee of $200+ will be levied for violations.</p>
           </div>
 
           <div className="clause">
             <div className="clause-title">5. Financial Obligations and Security Bond</div>
             <p><strong>5.1</strong> The Lessee agrees to pay the agreed Rental Rate at the intervals specified, in advance, without deduction or set-off.</p>
-            <p><strong>5.2</strong> A Security Bond is payable upon execution of this Agreement. The Bond will be retained in trust by the Lessor and refunded within 7 to 14 business days following termination of this Agreement and return of the Vehicle.</p>
-            <p><strong>5.3</strong> The Lessor may make lawful deductions from the Security Bond for unpaid rent, fuel replenishment costs, reasonable detailing fees, or documented damage to the Vehicle that exceeds Fair Wear and Tear and falls within the DLF parameters.</p>
+            <p><strong>5.2</strong> A Security Bond is payable upon execution. The Bond will be refunded within 3 to 7 business days following termination, subject to inspection.</p>
+            <p><strong>5.3</strong> The Lessor may make lawful deductions from the Security Bond for unpaid rent, fuel, or documented damage exceeding Fair Wear and Tear.</p>
           </div>
 
           <div className="clause">
-            <div className="clause-title">6. Authorised Use and Jurisdictional Compliance</div>
-            <p><strong>6.1</strong> The Vehicle must only be driven by the Lessee or additional drivers formally authorised in writing by the Lessor. All drivers must hold a valid, unexpired, and unrestricted driving licence applicable to the class of the Vehicle.</p>
-            <p><strong>6.2</strong> The Lessee must strictly comply with all statutory road rules, traffic laws, and mobile phone/wearable technology restrictions of the specific Australian State or Territory in which the Vehicle is operating.</p>
-            <p><strong>6.3</strong> The Lessee must not, and must not allow the Vehicle to be:</p>
-            <ul className="sub">
-              <li>used for any illegal purpose or in the commission of a criminal offence;</li>
-              <li>driven on unsealed roads, beaches, or through flooded areas, unless the Vehicle is explicitly designated as an off-road 4WD and authorised in writing for such environments;</li>
-              <li>used for racing, pace-making, reliability trials, or speed testing;</li>
-              <li>used to transport hazardous, toxic, or highly flammable materials;</li>
-              <li>driven by any person under the influence of alcohol, drugs, or any medication that impairs driving ability;</li>
-              <li>driven if it is materially damaged, unsafe, or displaying critical mechanical warning lights on the dashboard.</li>
-            </ul>
-            <p><strong>6.4</strong> The Vehicle is strictly a non-smoking environment. Pets are prohibited unless explicitly permitted in writing. A reasonable detailing fee will be levied if the Vehicle is returned with embedded smoke odour, excessive animal hair, or severe interior soiling.</p>
+            <div className="clause-title">6. Maintenance, Repairs, and Condition</div>
+            <p><strong>6.1</strong> The Lessor warrants that the Vehicle is roadworthy and fit for purpose at commencement.</p>
+            <p><strong>6.2</strong> The Lessor is responsible for capital repairs and scheduled servicing. The Lessee must notify the Lessor when servicing is due.</p>
+            <p><strong>6.3</strong> The Lessee is responsible for weekly checks of engine oil, coolant, and tyre pressures.</p>
+            <p><strong>6.4</strong> The Lessee must not undertake any alterations or repairs without the prior written consent of the Lessor.</p>
           </div>
 
           <div className="clause">
-            <div className="clause-title">7. Maintenance, Repairs, and Condition</div>
-            <p><strong>7.1</strong> The Lessor warrants that, at the Commencement Date, the Vehicle is roadworthy, structurally sound, and mechanically fit for its intended purpose.</p>
-            <p><strong>7.2</strong> <em>Lessor&apos;s Obligations:</em> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing. The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
-            <p><strong>7.3</strong> <em>Lessee&apos;s Obligations:</em> The Lessee is responsible for ongoing operational maintenance including weekly checks of engine oil levels, engine coolant levels, and tyre pressures, as well as maintaining adequate fuel or battery charge.</p>
-            <p><strong>7.4</strong> The Lessee must return the Vehicle in the same condition as documented at the Commencement Date, subject only to Fair Wear and Tear.</p>
-            <p><strong>7.5</strong> The Lessee must not authorise, commission, or undertake any mechanical repairs, aesthetic alterations, or component modifications to the Vehicle without the express prior written consent of the Lessor.</p>
+            <div className="clause-title">7. Damage Liability</div>
+            <p><strong>7.1</strong> The Lessee is responsible for any loss or damage up to the Damage Liability Fee (DLF) regardless of fault.</p>
+            <p><strong>7.2</strong> This cap is void if damage is linked to material breach (e.g., Clause 4 violations, incorrect fuel, submersion, or leaving keys in an unlocked vehicle).</p>
+            <p><strong>7.3</strong> The Lessee agrees to pay the Insurance Excess Amount ($1,000) in the event of any accident claim.</p>
           </div>
 
           <div className="clause">
-            <div className="clause-title">8. Damage Liability and Waiver Mechanisms</div>
-            <p><strong>8.1</strong> <em>No Insurance Product Sold:</em> The Lessor does not offer, sell, or distribute insurance policies. The Lessor utilises a contractual Damage Liability Fee (DLF) waiver mechanism to limit the Lessee&apos;s financial exposure to asset damage.</p>
-            <p><strong>8.2</strong> Subject to Clause 8.3, in the event of accidental loss or damage to the Vehicle, or third-party property damage caused by the Vehicle, the Lessee&apos;s maximum financial liability per incident is capped at the DLF stated in the Schedule.</p>
-            <p><strong>8.3</strong> <em>Breach and Loss of DLF Protection:</em> The DLF limitation will be voided, and the Lessee will be fully liable for all reasonably foreseeable repair costs, recovery and towing costs, and Loss of Use, if the damage or loss is causally linked to:</p>
-            <ul className="sub">
-              <li>a Material Breach of the Authorised Use conditions outlined in Clause 6;</li>
-              <li>the introduction of incorrect fuel or fluids into the Vehicle;</li>
-              <li>submersion in water or driving through flooded terrain;</li>
-              <li>mechanical failure directly resulting from the Lessee&apos;s failure to maintain oil/coolant levels as required by Clause 7.3;</li>
-              <li>a failure to secure the Vehicle, leading to its theft (e.g., leaving the keys in the ignition or cabin of an unattended vehicle).</li>
-            </ul>
-            <p><strong>8.4</strong> If the Lessee is not at fault for a collision, and an identified at-fault third party&apos;s insurer accepts full liability and finalises payment, the Lessor will refund the DLF to the Lessee.</p>
+            <div className="clause-title">8. Tolls, Traffic Infringements, and Fines</div>
+            <p><strong>8.1</strong> The Lessee is responsible for all toll charges, parking fines, and speeding tickets incurred during the term.</p>
+            <p><strong>8.2</strong> The Lessor may charge an Administrative Fee of $50.00 AUD per infringement for processing statutory liability transfers.</p>
           </div>
 
           <div className="clause">
-            <div className="clause-title">9. Tolls, Traffic Infringements, and Statutory Nominations</div>
-            <p><strong>9.1</strong> The Lessee is strictly responsible for all toll road charges, parking fines, speeding tickets, and any other traffic infringements incurred during the Rental Term across all Australian jurisdictions.</p>
-            <p><strong>9.2</strong> The Lessee hereby grants the Lessor irrevocable legal authority to nominate the Lessee to the relevant state or territory traffic authority (e.g., Fines Victoria, Revenue NSW) as the responsible driver for any camera-detected infringement notices received by the Lessor corresponding to the Rental Term.</p>
-            <p><strong>9.3</strong> The Lessor may charge a reasonable Administrative Fee not exceeding $45.00 AUD per infringement to cover the genuine, actual administrative costs incurred in processing the statutory nomination form and transferring the legal liability to the Lessee.</p>
-          </div>
-
-          <div className="clause">
-            <div className="clause-title">10. Accident and Breakdown Procedure</div>
-            <p><strong>10.1</strong> In the event of a collision or accident, the Lessee must:</p>
-            <ul className="sub">
-              <li>secure the Vehicle to prevent further damage;</li>
-              <li>notify the police immediately if required by state law (e.g., if vehicles require towing or there are injuries);</li>
-              <li>obtain the names, addresses, licence details, and vehicle registration numbers of all involved third parties;</li>
-              <li>notify the Lessor immediately;</li>
-              <li>refrain from admitting legal liability or guilt to any third party.</li>
-            </ul>
-            <p><strong>10.2</strong> In the event of an inherent mechanical breakdown not caused by the Lessee&apos;s negligence, the Lessor will arrange roadside assistance. If the Vehicle cannot be repaired in a reasonable timeframe, the Lessor will endeavour to provide a substitute vehicle of similar specification, or terminate the Agreement with a pro-rata refund for the unused term.</p>
-          </div>
-
-          <div className="clause">
-            <div className="clause-title">11. Default, Material Breach, and Termination</div>
-            <p><strong>11.1</strong> The Lessor may terminate this Agreement immediately and take lawful steps to repossess the Vehicle if the Lessee commits a defined Material Breach. A Material Breach strictly includes:</p>
-            <ul className="sub">
-              <li>failure to pay the Rental Rate for a consecutive period exceeding 14 days;</li>
-              <li>use of the Vehicle for illegal activities;</li>
-              <li>severe neglect, abandonment, or malicious damage to the Vehicle;</li>
-              <li>the Lessee becoming bankrupt, entering external administration, or liquidating.</li>
-            </ul>
-            <p><strong>11.2</strong> Upon termination for a Material Breach, the Lessee forfeits the right to possess the Vehicle but remains legally liable for all outstanding rent, repossession costs, and damage assessments. The Lessor will refund any pre-paid rent on a pro-rata basis, less any legally recoverable damages and actual costs incurred due to the Lessee&apos;s breach.</p>
-            <p><strong>11.3</strong> Either party may terminate this Agreement without cause by providing 14 days&apos; written notice, subject to the settlement of all outstanding financial obligations.</p>
-          </div>
-
-          <div className="clause">
-            <div className="clause-title">12. Dispute Resolution, Governing Law, and Jurisdiction</div>
-            <p><strong>12.1</strong> Any dispute arising under this Agreement must first be addressed through the Lessor&apos;s internal dispute resolution process. If unresolved, the Lessee may refer the matter to the Australian Car Rental Conciliation Service (CRCS) for independent review, or the relevant state consumer administrative tribunal.</p>
-            <p><strong>12.2</strong> This Agreement shall be governed by and construed in accordance with the laws of the State of Victoria, Australia.</p>
-            <p><strong>12.3</strong> The parties submit to the non-exclusive jurisdiction of the courts of Victoria, or the courts of any Australian State or Territory where the Vehicle is physically located, for the resolution of any legal proceedings or repossession actions.</p>
-          </div>
-
-          <div className="clause">
-            <div className="clause-title">13. Severability</div>
-            <p><strong>13.1</strong> If any term or provision of this Agreement is held to be invalid, void, or unenforceable by a court of competent jurisdiction under the ACL or any other statute, that specific provision will be severed from the Agreement. The remaining terms and provisions will continue to operate with full force and legal effect.</p>
+            <div className="clause-title">9. Default, Material Breach, and Termination</div>
+            <p><strong>9.1</strong> The Lessor may terminate immediately for failure to pay rent (&gt;14 days), illegal activities, abandonment, or misuse.</p>
+            <p><strong>9.2</strong> Either party may terminate without cause by providing 14 days&apos; written notice.</p>
           </div>
 
           <div className="execution-block">
             <p className="execution-note">
               By signing below, both parties confirm they have read, understood, and agree to be bound by all terms of
-              this Agreement, including the Damage Liability parameters, the PPSA security interest provisions, and
-              obligations regarding traffic infringements and maintenance.
+              this Agreement, including the Damage Liability parameters, maintenance obligations, and traffic infringement responsibilities.
             </p>
             <div className="sig-grid">
               <div className="sig-box">

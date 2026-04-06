@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motor Vehicle Rental Agreement</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ─── Variables ─── */
+:root {
+  --gold:       #B08D2E;
+  --gold-light: #D4AA4A;
+  --dark:       #1A1A1A;
+  --mid:        #3A3A3A;
+  --grey:       #666666;
+  --lgrey:      #AAAAAA;
+  --rule:       #DDDDDD;
+  --alt:        #F7F7F7;
+  --hdr:        #2C2C2C;
+  --label-bg:   #F2EAD0;
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Screen shell ─── */
+body {
+  background: #D6D1C7;
+  font-family: 'Sora', sans-serif;
+  color: var(--dark);
+}
+
+/* ─── Toolbar ─── */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+}
+.toolbar-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.toolbar-right { display: flex; gap: 10px; }
+.btn {
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-print { background: var(--gold);  color: #fff; }
+.btn-clear { background: #555; color: #fff; }
+
+/* ─── Page wrapper (screen) ─── */
+.pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 16px 48px;
+}
+
+/*
+  A4 page:
+  - Screen: 794px wide (A4 at 96dpi), content padded 52px top/bottom, 56px sides
+  - Print: @page size A4 with 15mm/18mm margins, pages break exactly
+*/
+.page {
+  width: 794px;
+  min-height: 1123px;
+  background: #fff;
+  padding: 52px 56px 48px;
+  box-shadow: 0 3px 24px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ─── Gold top bar ─── */
+.gold-bar {
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+  margin-bottom: 20px;
+}
+
+/* ─── Title block ─── */
+.doc-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dark);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.doc-subtitle {
+  font-size: 12px;
+  font-weight: 300;
+  font-style: italic;
+  text-align: center;
+  color: var(--grey);
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--gold);
+  margin-bottom: 16px;
+}
+.preamble {
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--mid);
+  margin-bottom: 16px;
+}
+
+/* ─── Section headings ─── */
+.sh {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dark);
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--gold);
+  margin-top: 18px;
+  margin-bottom: 9px;
+}
+
+/* ─── Clause text ─── */
+.cl {
+  font-size: 11px;
+  line-height: 1.72;
+  color: var(--dark);
+  margin-bottom: 5px;
+}
+.sc {
+  font-size: 11px;
+  line-height: 1.72;
+  color: var(--dark);
+  margin-bottom: 4px;
+  padding-left: 22px;
+}
+
+/* ─── Inline fillable (inside clause text) ─── */
+.f-inline {
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  color: var(--dark);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--gold);
+  outline: none;
+  width: 72px;
+  padding: 1px 3px;
+  text-align: center;
+}
+.f-inline::placeholder { color: #C0C0C0; font-style: italic; }
+.f-inline:focus { background: #FFFBEF; }
+
+/* ─── Schedule table ─── */
+.sched {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.sched .gh {
+  background: var(--hdr);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+}
+.sched td {
+  border: 1px solid var(--rule);
+  padding: 0;
+  vertical-align: middle;
+}
+.sched .lbl {
+  background: var(--label-bg);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--dark);
+  padding: 5px 9px;
+  white-space: nowrap;
+  width: 36%;
+}
+.sched .val {
+  background: #fff;
+  padding: 2px 6px;
+}
+.sched tr:nth-child(even) .val { background: var(--alt); }
+
+/* Fillable input */
+.f-input {
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  color: var(--dark);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 5px 4px;
+  min-height: 28px;
+}
+.f-input::placeholder { color: #C0C0C0; font-style: italic; }
+.f-input:focus { background: #FFFBEF; }
+
+/* Pre-filled lessor */
+.prefilled {
+  display: block;
+  padding: 6px 4px;
+  font-size: 11px;
+  color: var(--dark);
+  font-weight: 500;
+}
+
+/* ─── Signature block ─── */
+.sig-wrap {
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+}
+.sig-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.sig-hdr {
+  background: var(--hdr);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+}
+.sig-body {
+  border: 1px solid var(--rule);
+  border-top: none;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sig-field { display: flex; flex-direction: column; gap: 4px; }
+.sig-lbl {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+.sig-line {
+  border-bottom: 1px solid var(--dark);
+  height: 32px;
+  width: 100%;
+}
+.sig-val {
+  font-size: 11px;
+  color: var(--dark);
+  font-weight: 500;
+  padding: 4px 0 0;
+}
+
+/* Exec note */
+.exec-note {
+  font-size: 10.5px;
+  font-style: italic;
+  color: var(--grey);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+/* End rule */
+.end-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 36px;
+}
+.end-line { flex: 1; height: 1px; background: var(--gold); max-width: 80px; }
+.end-txt {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ─── Page footer ─── */
+.pf {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  text-align: center;
+  font-size: 8px;
+  color: var(--lgrey);
+  letter-spacing: 0.05em;
+}
+
+/* ════════════════════════════
+   PRINT
+════════════════════════════ */
+@media print {
+
+  @page {
+    size: A4;
+    margin: 15mm 18mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toolbar { display: none !important; }
+
+  .pages {
+    padding: 0;
+    gap: 0;
+    background: #fff;
+    display: block;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    box-shadow: none;
+    page-break-after: always;
+    break-after: page;
+    overflow: visible;
+    /* Remove top padding since @page margin handles it */
+    margin: 0;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .gold-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sh {
+    page-break-after: avoid;
+    break-after: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cl, .sc { orphans: 2; widows: 2; }
+
+  .sched .gh,
+  .sched .lbl,
+  .sig-hdr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .f-input {
+    border-bottom: 1px solid #888 !important;
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .f-inline {
+    border-bottom: 1px solid #888 !important;
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="toolbar-title">Motor Vehicle Rental Agreement &mdash; Fill &amp; Print</span>
+  <div class="toolbar-right">
+    <button class="btn btn-clear" onclick="clearForm()">Clear Fields</button>
+    <button class="btn btn-print" onclick="window.print()">&#8595; Download / Print PDF</button>
+  </div>
+</div>
+
+<div class="pages">
+
+<!-- ══════════════════════
+     PAGE 1
+══════════════════════ -->
+<div class="page">
+  <div class="gold-bar"></div>
+
+  <div class="doc-title">Motor Vehicle Rental Agreement</div>
+  <div class="doc-subtitle">Private Arrangement &mdash; Victoria, Australia</div>
+
+  <p class="preamble">
+    This Motor Vehicle Rental Agreement (&ldquo;Agreement&rdquo;) is entered into on the Date of Signing specified in the Schedule below, and establishes binding legal obligations between the Vehicle Owner (&ldquo;Lessor&rdquo;) and the Renter (&ldquo;Lessee&rdquo;) on the terms set out herein.
+  </p>
+
+  <div class="sh">1. &nbsp; Definitions and Interpretation</div>
+  <p class="cl">1.1 &nbsp; <strong>ACL</strong> means the Australian Consumer Law as set out in Schedule 2 of the Competition and Consumer Act 2010 (Cth).</p>
+  <p class="cl">1.2 &nbsp; <strong>Damage Liability Fee (DLF)</strong> means the maximum predetermined amount the Lessee is contractually liable to pay per incident in the event of loss or damage to the Vehicle, provided there has been no Material Breach of this Agreement.</p>
+  <p class="cl">1.3 &nbsp; <strong>Fair Wear and Tear</strong> means the objective standard of acceptable vehicle deterioration resulting from normal, reasonable use.</p>
+  <p class="cl">1.4 &nbsp; <strong>PPSA</strong> means the Personal Property Securities Act 2009 (Cth) and associated regulations.</p>
+  <p class="cl">1.5 &nbsp; <strong>Vehicle</strong> means the motor vehicle described in the Schedule, including all keys, remote entry devices, accessories, tools, tyres, and equipment supplied with it.</p>
+
+  <div class="sh">2. &nbsp; Schedule of Details</div>
+  <p class="cl" style="margin-bottom:8px;">Complete all fields below. Leave no field blank &mdash; write &ldquo;N/A&rdquo; where not applicable.</p>
+
+  <table class="sched">
+    <tr><td colspan="2" class="gh">Lessor (Vehicle Owner)</td></tr>
+    <tr>
+      <td class="lbl">Full Name / Company</td>
+      <td class="val"><span class="prefilled">Anirudh Ahlawat</span></td>
+    </tr>
+    <tr>
+      <td class="lbl">Address</td>
+      <td class="val"><span class="prefilled">36 Clearwater Rise Parade, Truganina VIC 3029</span></td>
+    </tr>
+    <tr>
+      <td class="lbl">Contact Number</td>
+      <td class="val"><span class="prefilled">0401 991 420</span></td>
+    </tr>
+    <tr>
+      <td class="lbl">Email Address</td>
+      <td class="val"><input class="f-input" type="email" placeholder="Enter email address" data-field="lessor-email"></td>
+    </tr>
+
+    <tr><td colspan="2" class="gh">Lessee (Primary Driver)</td></tr>
+    <tr>
+      <td class="lbl">Full Name</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Enter full name" data-field="lessee-name"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Address</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Enter full address" data-field="lessee-address"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Driver&rsquo;s Licence No.</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Licence number" data-field="lessee-licence"></td>
+    </tr>
+    <tr>
+      <td class="lbl">State / Country of Issue</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. VIC, NSW" data-field="lessee-state"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Licence Expiry Date</td>
+      <td class="val"><input class="f-input" type="text" placeholder="DD / MM / YYYY" data-field="lessee-expiry"></td>
+    </tr>
+
+    <tr><td colspan="2" class="gh">Emergency Contact</td></tr>
+    <tr>
+      <td class="lbl">Emergency Contact Name</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Full name" data-field="emerg-name"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Relationship</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. Spouse, Parent, Friend" data-field="emerg-relationship"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Phone Number</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Mobile or home number" data-field="emerg-phone"></td>
+    </tr>
+
+    <tr><td colspan="2" class="gh">Vehicle Details</td></tr>
+    <tr>
+      <td class="lbl">Make</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. Haval" data-field="v-make"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Model</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. H6" data-field="v-model"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Year</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. 2025" data-field="v-year"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Colour</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. Black" data-field="v-colour"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Registration Number</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. DTZ 377" data-field="v-rego"></td>
+    </tr>
+    <tr>
+      <td class="lbl">VIN</td>
+      <td class="val"><input class="f-input" type="text" placeholder="Vehicle Identification Number" data-field="v-vin"></td>
+    </tr>
+
+    <tr><td colspan="2" class="gh">Rental Parameters</td></tr>
+    <tr>
+      <td class="lbl">Rental Commencement Date</td>
+      <td class="val"><input class="f-input" type="text" placeholder="DD / MM / YYYY" data-field="r-start"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Rental Expiry Date</td>
+      <td class="val"><input class="f-input" type="text" placeholder="DD / MM / YYYY or TBC" data-field="r-end"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Weekly Rental Rate</td>
+      <td class="val"><input class="f-input" type="text" placeholder="$ per week" data-field="r-rate"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Security Bond</td>
+      <td class="val"><input class="f-input" type="text" placeholder="$" data-field="r-bond"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Bond Due Date</td>
+      <td class="val"><input class="f-input" type="text" placeholder="DD / MM / YYYY" data-field="r-bond-due"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Damage Liability Fee (DLF)</td>
+      <td class="val"><input class="f-input" type="text" placeholder="$" data-field="r-dlf"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Insurance Excess Amount</td>
+      <td class="val"><input class="f-input" type="text" placeholder="$1,000" data-field="r-insurance-excess" value="$1,000"></td>
+    </tr>
+
+    <tr><td colspan="2" class="gh">Vehicle Condition at Handover</td></tr>
+    <tr>
+      <td class="lbl">Odometer Reading (kms)</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. 12,450 kms" data-field="ho-odometer"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Fuel Level (%)</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. 75%" data-field="ho-fuel"></td>
+    </tr>
+    <tr>
+      <td class="lbl">Existing Damage / Notes</td>
+      <td class="val"><input class="f-input" type="text" placeholder="e.g. Minor scratch rear bumper, nil otherwise" data-field="ho-damage"></td>
+    </tr>
+  </table>
+
+  <div class="pf">Motor Vehicle Rental Agreement &mdash; Confidential &mdash; Governed by the Laws of Victoria, Australia &mdash; Page 1 of 4</div>
+</div>
+
+<!-- ══════════════════════
+     PAGE 2
+══════════════════════ -->
+<div class="page">
+  <div class="gold-bar"></div>
+
+  <div class="sh" style="margin-top:0;">3. &nbsp; Grant of Lease, Term, and Pricing</div>
+  <p class="cl">3.1 &nbsp; The Lessor grants the Lessee the right to possess and operate the Vehicle for the term specified in the Schedule, subject strictly to the terms of this Agreement.</p>
+  <p class="cl">3.2 &nbsp; The Lessee acknowledges that this Agreement constitutes a lease and bailment of the Vehicle. The Lessee obtains no legal or equitable title to the Vehicle.</p>
+  <p class="cl">3.3 &nbsp; If the Lessee retains possession of the Vehicle beyond the Rental Expiry Date without express written consent of the Lessor, the Lessee will be charged at the prevailing daily pro-rata rate. Following 48 hours of unauthorised retention, the Lessor reserves the right to report the Vehicle as stolen to relevant law enforcement agencies.</p>
+  <p class="cl">3.4 &nbsp; The Rental Rate stated in the Schedule is component-inclusive (base hire and standard overheads) but expressly excludes tolls, traffic infringements, and damage liabilities.</p>
+
+  <div class="sh">4. &nbsp; Authorised Use and Jurisdictional Compliance</div>
+  <p class="cl">4.1 &nbsp; The Vehicle must only be driven by the Lessee or additional drivers formally authorised in writing by the Lessor. All drivers must hold a valid, unexpired, and unrestricted driving licence applicable to the class of the Vehicle.</p>
+  <p class="cl">4.2 &nbsp; The Lessee must strictly comply with all statutory road rules, traffic laws, and mobile phone restrictions of the specific Australian State or Territory in which the Vehicle is operating.</p>
+  <p class="cl">4.3 &nbsp; The Lessee must not, and must not allow the Vehicle to be:</p>
+  <p class="sc">(a) &nbsp; used for any illegal purpose or in the commission of a criminal offence;</p>
+  <p class="sc">(b) &nbsp; used for racing, pace-making, reliability trials, or speed testing;</p>
+  <p class="sc">(c) &nbsp; used to transport hazardous, toxic, or highly flammable materials;</p>
+  <p class="sc">(d) &nbsp; driven by any person under the influence of alcohol, drugs, or any medication that impairs driving ability;</p>
+  <p class="sc">(e) &nbsp; driven if it is materially damaged, unsafe, or displaying critical mechanical warning lights;</p>
+  <p class="sc">(f) &nbsp; used for towing unless expressly approved in writing by the Lessor.</p>
+  <p class="cl">4.4 &nbsp; The Vehicle is strictly a non-smoking environment. Smoking is prohibited under any circumstances. Pets are strictly prohibited under any circumstances. A cleaning fee of $200 or more (if professional detailing is required) will be levied for any violation of this clause, including the presence of smoke odour, pet hair, or severe interior soiling.</p>
+
+  <div class="sh">5. &nbsp; Financial Obligations and Security Bond</div>
+  <p class="cl">5.1 &nbsp; The Lessee agrees to pay the agreed Rental Rate at the intervals specified, in advance, without deduction or set-off.</p>
+  <p class="cl">5.2 &nbsp; A Security Bond is payable upon execution of this Agreement. The Bond will be refunded within 3 to 7 business days following termination of this Agreement and return of the Vehicle, subject to inspection.</p>
+  <p class="cl">5.3 &nbsp; The Lessor may make lawful deductions from the Security Bond for unpaid rent, fuel replenishment costs, reasonable detailing fees, or documented damage to the Vehicle that exceeds Fair Wear and Tear.</p>
+
+  <div class="sh">6. &nbsp; Maintenance, Repairs, and Condition</div>
+  <p class="cl">6.1 &nbsp; The Lessor warrants that, at the Commencement Date, the Vehicle is roadworthy, structurally sound, and mechanically fit for its intended purpose.</p>
+  <p class="cl">6.2 &nbsp; <strong>Lessor&rsquo;s Obligations:</strong> The Lessor is responsible for all capital repairs, remediation of inherent mechanical faults, and all manufacturer-scheduled periodic servicing (including routine servicing). The Lessee must notify the Lessor immediately when scheduled servicing is approaching or if any mechanical fault manifests.</p>
+  <p class="cl">6.3 &nbsp; <strong>Lessee&rsquo;s Obligations:</strong> The Lessee is responsible for ongoing operational maintenance including weekly checks of engine oil levels, engine coolant levels, and tyre pressures, as well as maintaining adequate fuel or battery charge.</p>
+  <p class="cl">6.4 &nbsp; The Lessee must return the Vehicle in the same condition as documented at the Commencement Date, subject only to Fair Wear and Tear.</p>
+  <p class="cl">6.5 &nbsp; The Lessee must not authorise, commission, or undertake any mechanical repairs, aesthetic alterations, or component modifications to the Vehicle without the express prior written consent of the Lessor.</p>
+
+  <div class="pf">Motor Vehicle Rental Agreement &mdash; Confidential &mdash; Governed by the Laws of Victoria, Australia &mdash; Page 2 of 4</div>
+</div>
+
+<!-- ══════════════════════
+     PAGE 3
+══════════════════════ -->
+<div class="page">
+  <div class="gold-bar"></div>
+
+  <div class="sh" style="margin-top:0;">7. &nbsp; Damage Liability</div>
+  <p class="cl">7.1 &nbsp; The Lessee is fully responsible for any loss or damage to the Vehicle during the rental period, regardless of fault, up to the Damage Liability Fee (DLF) stated in the Schedule.</p>
+  <p class="cl">7.2 &nbsp; The DLF limitation will be voided, and the Lessee will be fully liable for all repair costs, recovery costs, and loss of use, if damage or loss is causally linked to:</p>
+  <p class="sc">(a) &nbsp; a Material Breach of the Authorised Use conditions outlined in Clause 4;</p>
+  <p class="sc">(b) &nbsp; introduction of incorrect fuel or fluids into the Vehicle;</p>
+  <p class="sc">(c) &nbsp; mechanical failure directly resulting from the Lessee&rsquo;s failure to maintain oil or coolant levels as required by Clause 6.3;</p>
+  <p class="sc">(d) &nbsp; a failure to secure the Vehicle, leading to its theft (e.g., leaving keys in the ignition or cabin of an unattended vehicle).</p>
+  <p class="cl">7.3 &nbsp; The Lessee is liable for any third-party damage caused while operating the Vehicle.</p>
+  <p class="cl">7.4 &nbsp; The Lessee agrees to pay the Insurance Excess Amount specified in the Schedule in the event of any accident or claim, regardless of fault.</p>
+
+  <div class="sh">8. &nbsp; Tolls, Traffic Infringements, and Fines</div>
+  <p class="cl">8.1 &nbsp; The Lessee is strictly responsible for all toll road charges, parking fines, speeding tickets, and any other traffic infringements incurred during the Rental Term across all Australian jurisdictions.</p>
+  <p class="cl">8.2 &nbsp; The Lessee must use their own Linkt account or toll payment arrangement for all toll roads, including CityLink, EastLink, or any Australian toll network. If tolls or fines are charged to the Lessor, they will be passed on to the Lessee in full.</p>
+  <p class="cl">8.3 &nbsp; The Lessor may charge an Administrative Fee not exceeding $<input class="f-input f-inline" type="text" placeholder="50.00" value="50.00" data-field="admin-fee"> AUD per infringement to cover the genuine costs incurred in processing and transferring statutory liability to the Lessee.</p>
+
+  <div class="sh">9. &nbsp; Fuel Policy</div>
+  <p class="cl">9.1 &nbsp; The Vehicle must be returned with the same fuel level as at the start of the rental.</p>
+  <p class="cl">9.2 &nbsp; Failure to return the Vehicle with the same fuel level will result in refuelling charges plus a reasonable service fee.</p>
+
+  <div class="sh">10. &nbsp; Accident and Breakdown Procedure</div>
+  <p class="cl">10.1 &nbsp; In the event of a collision or accident, the Lessee must:</p>
+  <p class="sc">(a) &nbsp; secure the Vehicle to prevent further damage;</p>
+  <p class="sc">(b) &nbsp; notify the police immediately if required by state law;</p>
+  <p class="sc">(c) &nbsp; obtain the names, addresses, licence details, and vehicle registration numbers of all involved third parties;</p>
+  <p class="sc">(d) &nbsp; notify the Lessor immediately;</p>
+  <p class="sc">(e) &nbsp; refrain from admitting legal liability or guilt to any third party.</p>
+  <p class="cl">10.2 &nbsp; In the event of an inherent mechanical breakdown not caused by the Lessee&rsquo;s negligence, the Lessor will arrange roadside assistance. If the Vehicle cannot be repaired in a reasonable timeframe, the Lessor will endeavour to provide a substitute vehicle of similar specification, or terminate the Agreement with a pro-rata refund for the unused term.</p>
+  <p class="cl">10.3 &nbsp; Failure to follow the above procedure may result in the Lessee bearing full liability for all associated costs.</p>
+
+  <div class="sh">11. &nbsp; Default, Material Breach, and Termination</div>
+  <p class="cl">11.1 &nbsp; The Lessor may terminate this Agreement immediately and repossess the Vehicle if the Lessee commits a Material Breach, including:</p>
+  <p class="sc">(a) &nbsp; failure to pay the Rental Rate for a consecutive period exceeding 14 days;</p>
+  <p class="sc">(b) &nbsp; use of the Vehicle for illegal activities;</p>
+  <p class="sc">(c) &nbsp; severe neglect, abandonment, or malicious damage to the Vehicle;</p>
+  <p class="sc">(d) &nbsp; misuse of the Vehicle contrary to the terms of this Agreement.</p>
+  <p class="cl">11.2 &nbsp; Upon termination for Material Breach, no refund of any pre-paid rent will be provided unless otherwise required by law. The Lessee remains liable for all outstanding obligations.</p>
+  <p class="cl">11.3 &nbsp; Either party may terminate this Agreement without cause by providing 14 days&rsquo; written notice, subject to settlement of all outstanding financial obligations.</p>
+
+  <div class="sh">12. &nbsp; Indemnity</div>
+  <p class="cl">12.1 &nbsp; The Lessee agrees to indemnify and hold harmless the Lessor against any claims, damages, losses, or liabilities arising from the Lessee&rsquo;s use of the Vehicle, including any third-party claims.</p>
+
+  <div class="sh">13. &nbsp; Dispute Resolution and Governing Law</div>
+  <p class="cl">13.1 &nbsp; Any dispute arising under this Agreement must first be addressed through good-faith negotiation between the parties. If unresolved, the matter may be referred to the relevant state consumer administrative tribunal.</p>
+  <p class="cl">13.2 &nbsp; This Agreement shall be governed by and construed in accordance with the laws of the State of Victoria, Australia.</p>
+  <p class="cl">13.3 &nbsp; The parties submit to the non-exclusive jurisdiction of the courts of Victoria for the resolution of any legal proceedings.</p>
+
+  <div class="sh">14. &nbsp; Severability</div>
+  <p class="cl">14.1 &nbsp; If any term or provision of this Agreement is held to be invalid or unenforceable by a court of competent jurisdiction, that specific provision will be severed from the Agreement. The remaining terms will continue to operate with full force and legal effect.</p>
+
+  <div class="pf">Motor Vehicle Rental Agreement &mdash; Confidential &mdash; Governed by the Laws of Victoria, Australia &mdash; Page 3 of 4</div>
+</div>
+
+<!-- ══════════════════════
+     PAGE 4 — Execution
+══════════════════════ -->
+<div class="page">
+  <div class="gold-bar"></div>
+
+  <div class="sh" style="margin-top:0;">Execution</div>
+  <p class="exec-note">By signing below, both parties confirm they have read, understood, and agree to be bound by all terms of this Agreement, including the Damage Liability parameters, maintenance obligations, and traffic infringement responsibilities.</p>
+
+  <div class="sig-wrap">
+    <div class="sig-col">
+      <div class="sig-hdr">Lessor (Vehicle Owner)</div>
+      <div class="sig-body">
+        <div class="sig-field">
+          <span class="sig-lbl">Signature</span>
+          <span class="sig-line"></span>
+        </div>
+        <div class="sig-field">
+          <span class="sig-lbl">Full Name</span>
+          <span class="sig-val">Anirudh Ahlawat</span>
+        </div>
+        <div class="sig-field">
+          <span class="sig-lbl">Date</span>
+          <span class="sig-line"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sig-col">
+      <div class="sig-hdr">Lessee (Primary Driver)</div>
+      <div class="sig-body">
+        <div class="sig-field">
+          <span class="sig-lbl">Signature</span>
+          <span class="sig-line"></span>
+        </div>
+        <div class="sig-field">
+          <span class="sig-lbl">Full Name</span>
+          <span class="sig-line"></span>
+        </div>
+        <div class="sig-field">
+          <span class="sig-lbl">Date</span>
+          <span class="sig-line"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="end-rule">
+    <div class="end-line"></div>
+    <span class="end-txt">End of Agreement</span>
+    <div class="end-line"></div>
+  </div>
+
+  <div class="pf" style="margin-top:auto;">Motor Vehicle Rental Agreement &mdash; Confidential &mdash; Governed by the Laws of Victoria, Australia &mdash; Page 4 of 4</div>
+</div>
+
+</div><!-- /.pages -->
+
+<script>
+  // Fields with default values that should restore on clear rather than go blank
+  const DEFAULTS = {
+    'r-insurance-excess': '$1,000',
+    'admin-fee': '50.00',
+  };
+
+  const inputs = document.querySelectorAll('.f-input');
+
+  inputs.forEach(inp => {
+    const key = inp.dataset.field;
+    if (!key) return;
+    // Restore from session if previously filled
+    const saved = sessionStorage.getItem('raf_' + key);
+    if (saved !== null) inp.value = saved;
+    // Persist on every keystroke
+    inp.addEventListener('input', () => sessionStorage.setItem('raf_' + key, inp.value));
+  });
+
+  function clearForm() {
+    if (!confirm('Clear all filled fields and reset to defaults?')) return;
+    inputs.forEach(inp => {
+      const key = inp.dataset.field;
+      if (!key) return;
+      // Restore default if one exists, otherwise blank
+      inp.value = DEFAULTS[key] !== undefined ? DEFAULTS[key] : '';
+      if (DEFAULTS[key] !== undefined) {
+        sessionStorage.setItem('raf_' + key, DEFAULTS[key]);
+      } else {
+        sessionStorage.removeItem('raf_' + key);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -447,6 +447,17 @@ tbody tr:hover { background: #f8fbff; }
         <div class="form-section-label">Contract Dates</div>
         <div class="field"><label>Start Date</label><input id="c-startDate" type="date"></div>
         <div class="field"><label>End Date</label><input id="c-endDate" type="date"></div>
+
+        <div class="form-section-label">External Reference</div>
+        <div class="field span-2" style="display:flex; flex-direction:row; align-items:center; gap:10px; padding:10px; background:#eff6ff; border-radius:6px; border:1px solid #bfdbfe; margin-top:8px;">
+          <input type="checkbox" id="c-isExternal" style="width:18px; height:18px;" onchange="toggleExternalFields()">
+          <label for="c-isExternal" style="font-weight:600; color:var(--blue); cursor:pointer; font-size:12px;">This is an External Contract (Skip Email)</label>
+        </div>
+        <div id="c-externalLinkContainer" class="field span-2" style="display:none; margin-top:10px;">
+          <label>External Contract Link (URL)</label>
+          <input id="c-externalLink" placeholder="https://example.com/contract-link">
+          <span style="font-size:11px; color:var(--text-muted); margin-top:2px;">Paste the link to the existing contract.</span>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -504,7 +515,8 @@ function dbToVehicle(r) {
     purchaseDate: r.purchase_date, firstInstallmentDate: r.first_installment_date, loanTermMonths: r.loan_term_months,
     regoExpiry: r.rego_expiry || null,
     lname: r.lessee_name, lemail: r.lessee_email,
-    lphone: r.lessee_phone, status: r.status };
+    lphone: r.lessee_phone, status: r.status,
+    externalContractUrl: r.external_contract_url || null };
 }
 function vehicleToDb(v) {
   return { make: v.make, model: v.model, year: v.year || null, colour: v.colour || null,
@@ -518,7 +530,8 @@ function vehicleToDb(v) {
     loan_term_months: parseInt(v.loanTermMonths, 10) || 60,
     rego_expiry: v.regoExpiry || null,
     lessee_name: v.lname || null, lessee_email: v.lemail || null,
-    lessee_phone: v.lphone || null, status: v.status };
+    lessee_phone: v.lphone || null, status: v.status,
+    external_contract_url: v.externalContractUrl || null };
 }
 function dbToExpense(r) {
   return { id: r.id, vehicleId: r.vehicle_id, category: r.category,
@@ -769,7 +782,7 @@ function renderVehicles() {
       <td><span class="badge badge-${v.status}">${v.status}</span></td>
       <td><div style="display:flex; gap:6px;">
         <button class="btn-icon" title="Send Contract" onclick="openContractModal('${v.id}')" style="color:var(--green);">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+          ${v.externalContractUrl ? '<svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/><path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/></svg>' : '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>'}
         </button>
         <button class="btn-icon" title="Edit" onclick="editVehicle('${v.id}')">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
@@ -1041,14 +1054,15 @@ function renderContracts() {
     const statusBadge = c.status === 'signed'
       ? '<span class="badge badge-signed">Signed</span>'
       : '<span class="badge badge-pending">Pending</span>';
-    const actionBtn = c.status !== 'signed'
-      ? `<button class="btn btn-outline btn-sm" onclick="copyLink('${signLink}', this)">Copy Link</button>`
-      : '';
+    const actionBtn = c.external_link 
+      ? `<a href="${c.external_link}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">View External</a>`
+      : (c.status !== 'signed' ? `<button class="btn btn-outline btn-sm" onclick="copyLink('${signLink}', this)">Copy Link</button>` : '');
     return `
       <tr>
         <td>
           <div style="font-weight:600">${c.vehicle_make} ${c.vehicle_model}</div>
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${c.vehicle_rego || '—'}</div>
+          ${c.external_link ? '<div style="font-size:10px; color:var(--accent); font-weight:600; margin-top:2px;">EXTERNAL</div>' : ''}
         </td>
         <td>
           <div style="font-weight:500">${c.client_name}</div>
@@ -1103,8 +1117,19 @@ function openContractModal(vehicleId) {
   document.getElementById('c-clientExpiry').value = '';
   document.getElementById('c-startDate').value = '';
   document.getElementById('c-endDate').value = '';
+  
+  // Reset External Fields
+  document.getElementById('c-isExternal').checked = false;
+  document.getElementById('c-externalLink').value = '';
+  document.getElementById('c-externalLinkContainer').style.display = 'none';
+  
   document.getElementById('contractModalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function toggleExternalFields() {
+  const isExt = document.getElementById('c-isExternal').checked;
+  document.getElementById('c-externalLinkContainer').style.display = isExt ? 'block' : 'none';
 }
 
 function closeContractModal() {
@@ -1117,13 +1142,10 @@ async function sendContract() {
   const v = vehicles.find(x => x.id === vehicleId);
   if (!v) return;
 
-  const clientName = document.getElementById('c-clientName').value;
-  const clientEmail = document.getElementById('c-clientEmail').value;
-  const weeklyRate = document.getElementById('c-rate').value;
-  const bondAmount = document.getElementById('c-bond').value;
-  const dlfAmount = document.getElementById('c-dlf').value;
-  const startDate = document.getElementById('c-startDate').value;
-  const endDate = document.getElementById('c-endDate').value;
+  const isExternal = document.getElementById('c-isExternal').checked;
+  const externalLink = document.getElementById('c-externalLink').value;
+
+  if (isExternal && !externalLink) return alert('Please enter the External Contract Link URL.');
 
   if (!clientName) return alert('Please enter the Client Name.');
   if (!clientEmail) return alert('Please enter a valid Client Email.');
@@ -1133,7 +1155,7 @@ async function sendContract() {
   if (!startDate || !endDate) return alert('Please enter both Start and End dates.');
 
   const payload = {
-    lessorName: 'Mani — MCR (Mani\'s Car Rentals)',
+    lessorName: 'Anirudh Ahlawat',
     lessorAddress: '36 Clearwater Rise Parade, Truganina VIC 3029',
     lessorPhone: '+61 401 991 420',
     clientName, clientEmail,
@@ -1146,15 +1168,27 @@ async function sendContract() {
     vehicleRego: v.rego || '', vehicleVin: v.vin || '',
     startDate, endDate,
     bondAmount: bondAmount || '0', weeklyPayment: weeklyRate, dlfAmount: dlfAmount || '0',
+    externalLink: isExternal ? externalLink : null
   };
 
   const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const result = await res.json();
   if (!res.ok) { alert('Error sending contract: ' + result.error); return; }
 
-  // Update vehicle lessee + rate + bond + dlf in Supabase and local state
-  await sb.from('vehicles').update({ lessee_name: clientName, lessee_email: clientEmail, weekly_rate: parseFloat(weeklyRate) || 0, bond_amount: parseFloat(bondAmount) || 0, dlf_amount: parseFloat(dlfAmount) || 0, status: 'active' }).eq('id', vehicleId);
+  // Update vehicle lessee + rate + bond + dlf + external link in Supabase and local state
+  const vehicleUpdate = { 
+    lessee_name: clientName, 
+    lessee_email: clientEmail, 
+    weekly_rate: parseFloat(weeklyRate) || 0, 
+    bond_amount: parseFloat(bondAmount) || 0, 
+    dlf_amount: parseFloat(dlfAmount) || 0, 
+    status: 'active',
+    external_contract_url: isExternal ? externalLink : null
+  };
+  await sb.from('vehicles').update(vehicleUpdate).eq('id', vehicleId);
+  
   v.status = 'active'; v.lname = clientName; v.lemail = clientEmail; v.rate = weeklyRate; v.bond = bondAmount; v.dlf = dlfAmount;
+  v.externalContractUrl = isExternal ? externalLink : null;
   vehicles = vehicles.map(x => x.id === v.id ? v : x);
 
   // Refresh contracts from Supabase
@@ -1163,7 +1197,12 @@ async function sendContract() {
 
   closeContractModal();
   renderAll();
-  openSuccessModal(result.signLink, clientName, `${v.make} ${v.model}`, startDate, endDate);
+  
+  if (isExternal) {
+    alert('External contract attached successfully! Vehicle status set to Active.');
+  } else {
+    openSuccessModal(result.signLink, clientName, `${v.make} ${v.model}`, startDate, endDate);
+  }
 }
 
 // ══════════════════════════════════════════════

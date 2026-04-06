@@ -45,7 +45,10 @@ export async function POST(req: Request) {
           weekly_payment: data.weeklyPayment,
           dlf_amount: data.dlfAmount,
           
-          status: 'pending'
+          status: data.externalLink ? 'signed' : 'pending',
+          external_link: data.externalLink || null,
+          signature: data.externalLink ? 'EXTERNAL' : null,
+          signed_at: data.externalLink ? new Date().toISOString() : null
         }
       ])
       .select()
@@ -57,9 +60,9 @@ export async function POST(req: Request) {
 
     const contractId = contractData.id;
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const signLink = `${baseUrl}/sign/${contractId}`;
+    const signLink = data.externalLink || `${baseUrl}/sign/${contractId}`;
 
-    if (process.env.RESEND_API_KEY) {
+    if (!data.externalLink && process.env.RESEND_API_KEY) {
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: 'Anirudh Contracts <onboarding@resend.dev>',
         to: [data.clientEmail],
@@ -84,8 +87,10 @@ export async function POST(req: Request) {
       if (emailError) {
         return NextResponse.json({ error: emailError.message }, { status: 400, headers: corsHeaders });
       }
-    } else {
+    } else if (!data.externalLink) {
       console.log('RESEND_API_KEY not set. Would have sent email with link:', signLink);
+    } else {
+      console.log('External contract linked, skipping email.');
     }
 
     return NextResponse.json({ success: true, contractId, signLink }, { headers: corsHeaders });
