@@ -1113,20 +1113,43 @@ function renderContracts() {
     // Action buttons
     let actions;
     if (bothSigned) {
-      actions = '<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>Locked</span>';
+      actions = `
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="btn-icon" title="View PDF" onclick="printStoredContract('${c.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </button>
+          <button class="btn-icon text-red" title="Delete History" onclick="deleteContract('${c.id}')">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          </button>
+          <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;margin-left:4px;"><svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>Locked</span>
+        </div>`;
     } else if (c.external_link) {
-      actions = `<a href="${c.external_link}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">View External</a>`;
+      actions = `
+        <div style="display:flex;gap:4px;align-items:center;">
+          <a href="${c.external_link}" target="_blank" class="btn-icon" title="View External Contract" style="color:var(--accent);">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/></svg>
+          </a>
+          <button class="btn-icon text-red" title="Delete" onclick="deleteContract('${c.id}')">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>`;
     } else {
-      const editBtn = `<button class="btn-icon" title="Edit Contract" onclick="openEditContractModal('${c.id}')">
+      const editBtn = `<button class="btn-icon" title="Edit / Resend" onclick="openEditContractModal('${c.id}')">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
       </button>`;
       const signBtn = !lessorSig ? `<button class="btn-icon" title="Sign as Lessor" onclick="openLessorSignModal('${c.id}')" style="color:var(--accent);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
       </button>` : '';
-      const copyBtn = `<button class="btn-icon" title="Copy Signing Link" onclick="copyLink('${signLink}', this)">
+      const pdfBtn = `<button class="btn-icon" title="View PDF" onclick="printStoredContract('${c.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </button>`;
+      const copyBtn = `<button class="btn-icon" title="Copy Link" onclick="copyLink('${signLink}', this)">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
       </button>`;
-      actions = `<div style="display:flex;gap:4px;align-items:center;">${editBtn}${signBtn}${copyBtn}</div>`;
+      const delBtn = `<button class="btn-icon text-red" title="Delete" onclick="deleteContract('${c.id}')">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+      </button>`;
+      actions = `<div style="display:flex;gap:4px;align-items:center;">${editBtn}${signBtn}${pdfBtn}${copyBtn}${delBtn}</div>`;
     }
 
     return `
@@ -1147,6 +1170,137 @@ function renderContracts() {
         <td>${actions}</td>
       </tr>`;
   }).join('');
+}
+
+async function deleteContract(id) {
+  if (!confirm('Permanently delete this contract record from history?')) return;
+  const { error } = await sb.from('contracts').delete().eq('id', id);
+  if (error) return alert('Error deleting: ' + error.message);
+  contracts = contracts.filter(c => c.id !== id);
+  renderContracts();
+}
+
+async function printStoredContract(id) {
+  const c = contracts.find(x => x.id === id);
+  if (!c) return alert('Contract not found.');
+
+  const clientName       = c.client_name       || '_______________';
+  const clientEmail      = c.client_email      || '_______________';
+  const clientPhone      = c.client_phone      || '_______________';
+  const clientAddress    = c.client_address    || '_______________';
+  const clientLicence    = c.client_licence    || '_______________';
+  const clientState      = c.client_state      || '_______________';
+  const clientExpiry     = c.client_expiry     || '_______________';
+  const weeklyRate       = c.weekly_payment    || '0.00';
+  const bondAmount       = c.bond_amount       || '0.00';
+  const bondDueDate      = c.bond_due_date     || '_______________';
+  const dlfAmount        = c.dlf_amount        || '0.00';
+  const insuranceExcess  = c.insurance_excess  || '$1,000';
+  const startDate        = c.start_date        || '_______________';
+  const endDate          = c.end_date          || '_______________';
+  const odometer         = c.ho_odometer       || '_______________';
+  const fuelLevel        = c.ho_fuel           || '_______________';
+  const existingDamage   = c.ho_damage         || '_______________';
+
+  const previewHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contract - ${clientName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#B08D2E;--gold-light:#D4AA4A;--dark:#1A1A1A;--mid:#3A3A3A;--grey:#666;--lgrey:#AAA;--rule:#DDD;--alt:#F7F7F7;--hdr:#2C2C2C;--label-bg:#F2EAD0;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#D6D1C7;font-family:'Sora',sans-serif;color:var(--dark);}
+.toolbar{position:sticky;top:0;z-index:100;background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:12px 28px;}
+.toolbar-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-light);}
+.btn{font-family:'Sora',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;padding:8px 18px;border-radius:3px;cursor:pointer;}
+.btn-print{background:var(--gold);color:#fff;}
+.pages{display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 16px 48px;}
+.page{width:794px;min-height:1123px;background:#fff;padding:52px 56px 48px;box-shadow:0 3px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;position:relative;}
+.gold-bar{height:4px;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-light) 50%,var(--gold) 100%);margin-bottom:20px;}
+.doc-title{font-size:20px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;text-align:center;color:var(--dark);line-height:1.2;margin-bottom:6px;}
+.doc-subtitle{font-size:12px;font-weight:300;font-style:italic;text-align:center;color:var(--grey);padding-bottom:10px;border-bottom:3px solid var(--gold);margin-bottom:16px;}
+.sh{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark);padding-bottom:5px;border-bottom:2px solid var(--gold);margin-top:18px;margin-bottom:9px;}
+.cl{font-size:11px;line-height:1.72;color:var(--dark);margin-bottom:5px;}
+.sc{font-size:11px;line-height:1.72;color:var(--dark);margin-bottom:4px;padding-left:22px;}
+.sched{width:100%;border-collapse:collapse;margin-top:8px;margin-bottom:4px;font-size:11px;}
+.sched .gh{background:var(--hdr);color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;}
+.sched td{border:1px solid var(--rule);padding:0;vertical-align:middle;}
+.sched .lbl{background:var(--label-bg);font-size:10px;font-weight:600;color:var(--dark);padding:5px 9px;white-space:nowrap;width:36%;}
+.sched .val{background:#fff;padding:5px 8px;font-size:11px;}
+.sig-wrap{display:flex;gap:20px;margin-top:14px;}
+.sig-col{flex:1;display:flex;flex-direction:column;}
+.sig-hdr{background:var(--hdr);color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;}
+.sig-body{border:1px solid var(--rule);border-top:none;padding:14px 12px;display:flex;flex-direction:column;gap:16px;}
+.sig-field{display:flex;flex-direction:column;gap:4px;}
+.sig-lbl{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--grey);}
+.sig-line{border-bottom:1px solid var(--dark);height:32px;width:100%;}
+.sig-val{font-size:11px;color:var(--dark);font-weight:500;padding:4px 0 0;}
+.pf{margin-top:auto;padding-top:8px;border-top:1px solid var(--rule);text-align:center;font-size:8px;color:var(--lgrey);letter-spacing:.05em;}
+@media print{
+  @page{size:A4;margin:15mm 18mm;}
+  html,body{background:#fff!important;margin:0;padding:0;}
+  .toolbar{display:none!important;}
+  .pages{padding:0;gap:0;background:#fff;display:block;}
+  .page{width:100%;min-height:0;height:auto;padding:0;box-shadow:none;page-break-after:always;break-after:page;overflow:visible;margin:0;}
+  .page:last-child{page-break-after:avoid;break-after:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <span class="toolbar-title">Historical Contract Reference</span>
+  <button class="btn btn-print" onclick="window.print()">&#8595; Save as PDF</button>
+</div>
+<div class="pages">
+<div class="page">
+  <div class="gold-bar"></div>
+  <div class="doc-title">Motor Vehicle Rental Agreement</div>
+  <div class="doc-subtitle">Historical Record &mdash; Victoria, Australia</div>
+  
+  <div class="sh">Schedule of Details</div>
+  <table class="sched">
+    <tr><td colspan="2" class="gh">Lessor (Vehicle Owner)</td></tr>
+    <tr><td class="lbl">Full Name</td><td class="val">${c.lessor_name}</td></tr>
+    <tr><td class="lbl">Address</td><td class="val">${c.lessor_address}</td></tr>
+    <tr><td colspan="2" class="gh">Lessee (Primary Driver)</td></tr>
+    <tr><td class="lbl">Full Name</td><td class="val">${clientName}</td></tr>
+    <tr><td class="lbl">Address</td><td class="val">${clientAddress}</td></tr>
+    <tr><td class="lbl">Licence No.</td><td class="val">${clientLicence} (${clientState})</td></tr>
+    <tr><td colspan="2" class="gh">Vehicle Details</td></tr>
+    <tr><td class="lbl">Vehicle</td><td class="val">${c.vehicle_make} ${c.vehicle_model} (${c.vehicle_year})</td></tr>
+    <tr><td class="lbl">Registration</td><td class="val">${c.vehicle_rego}</td></tr>
+    <tr><td colspan="2" class="gh">Rental Terms</td></tr>
+    <tr><td class="lbl">Rate</td><td class="val">$${weeklyRate}/week</td></tr>
+    <tr><td class="lbl">Bond</td><td class="val">$${bondAmount} (Due: ${bondDueDate})</td></tr>
+    <tr><td class="lbl">Term</td><td class="val">${startDate} to ${endDate}</td></tr>
+  </table>
+
+  <div class="sh">Execution (History)</div>
+  <div class="sig-wrap">
+    <div class="sig-col">
+      <div class="sig-hdr">Lessor Signature</div>
+      <div class="sig-body" style="background:#fff; height:100px; display:grid; place-items:center;">
+        ${c.lessor_signature ? `<img src="${c.lessor_signature}" style="max-height:80px; max-width:90%;">` : '<span style="color:var(--lgrey)">NOT SIGNED</span>'}
+      </div>
+    </div>
+    <div class="sig-col">
+      <div class="sig-hdr">Lessee Signature</div>
+      <div class="sig-body" style="background:#fff; height:100px; display:grid; place-items:center;">
+        ${c.signature ? `<img src="${c.signature}" style="max-height:80px; max-width:90%;">` : '<span style="color:var(--lgrey)">NOT SIGNED</span>'}
+      </div>
+    </div>
+  </div>
+  <div class="pf">Motor Vehicle Rental Agreement &mdash; Confidentially Generated &mdash; Victoria, Australia</div>
+</div>
+</div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(previewHTML);
+  win.document.close();
 }
 
 // ══════════════════════════════════════════════
