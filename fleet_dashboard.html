@@ -798,7 +798,21 @@ function renderVehicles() {
           Edit vehicle
         </button>
       </div></td>
-      <td style="font-weight:600; text-transform:uppercase">${v.rego || '—'}</td>
+      <td style="vertical-align: top; padding-top: 14px;">
+        <div style="font-weight:600; text-transform:uppercase; margin-bottom: 2px;">${v.rego || '—'}</div>
+        ${v.regoExpiry ? (() => {
+          const expDate = new Date(v.regoExpiry + 'T00:00:00');
+          const today = new Date(); today.setHours(0,0,0,0);
+          const diffMs = expDate.getTime() - today.getTime();
+          const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
+          let color = 'var(--green)';
+          if (days < 0) color = 'var(--red)';
+          else if (days <= 30) color = 'var(--red)';
+          else if (days <= 90) color = 'var(--amber)';
+          const fmt = expDate.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+          return `<div style="font-size:11px; font-weight:500; color:${color}">Exp: ${fmt}</div>`;
+        })() : '<div style="font-size:11px; color:var(--text-light)">Exp: —</div>'}
+      </td>
       <td>
         ${lesseeCell}${dateRow}
         ${v.status === 'active' ? `
