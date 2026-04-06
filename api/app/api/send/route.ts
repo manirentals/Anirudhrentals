@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const signLink = data.externalLink || `${baseUrl}/sign/${contractId}`;
 
-    if (!data.externalLink && process.env.RESEND_API_KEY) {
+    if (!data.externalLink && !data.saveOnly && process.env.RESEND_API_KEY) {
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: 'Anirudh Contracts <onboarding@resend.dev>',
         to: [data.clientEmail],
@@ -100,6 +100,8 @@ export async function POST(req: Request) {
       if (emailError) {
         return NextResponse.json({ error: emailError.message }, { status: 400, headers: corsHeaders });
       }
+    } else if (data.saveOnly) {
+      console.log('saveOnly flag set. Contract saved to DB, no email sent.');
     } else if (!data.externalLink) {
       console.log('RESEND_API_KEY not set. Would have sent email with link:', signLink);
     } else {

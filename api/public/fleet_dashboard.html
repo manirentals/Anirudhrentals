@@ -479,6 +479,10 @@ tbody tr:hover { background: #f8fbff; }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
         Preview &amp; Print PDF
       </button>
+      <button id="c-saveBtn" class="btn btn-outline" onclick="saveContractOnly()" style="color:var(--amber);border-color:var(--amber);">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg>
+        Save to Vehicle
+      </button>
       <button id="c-sendBtn" class="btn btn-green" onclick="sendContract()">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
         Send Contract to Client
@@ -1398,6 +1402,98 @@ body{background:#D6D1C7;font-family:'Sora',sans-serif;color:var(--dark);}
   win.document.write(previewHTML);
   win.document.close();
   win.setTimeout(() => win.print(), 1000);
+}
+
+async function saveContractOnly() {
+  const vehicleId = document.getElementById('c-vehicleId').value;
+  const v = vehicles.find(x => x.id === vehicleId);
+  if (!v) return;
+
+  const clientName  = document.getElementById('c-clientName').value;
+  const clientEmail = document.getElementById('c-clientEmail').value;
+  const weeklyRate  = document.getElementById('c-rate').value;
+  const bondAmount  = document.getElementById('c-bond').value;
+  const dlfAmount   = document.getElementById('c-dlf').value;
+  const startDate   = document.getElementById('c-startDate').value;
+  const endDate     = document.getElementById('c-endDate').value;
+
+  if (!clientName) return alert('Please enter the Client Name.');
+
+  const btn = document.getElementById('c-saveBtn');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+
+  const payload = {
+    lessorName: 'Anirudh Ahlawat',
+    lessorAddress: '36 Clearwater Rise Parade, Truganina VIC 3029',
+    lessorPhone: '+61 401 991 420',
+    clientName, clientEmail,
+    clientPhone: document.getElementById('c-clientPhone').value,
+    clientAddress: document.getElementById('c-clientAddress').value,
+    clientLicence: document.getElementById('c-clientLicence').value,
+    clientState: document.getElementById('c-clientState').value,
+    clientExpiry: document.getElementById('c-clientExpiry').value,
+    emergName: document.getElementById('c-emergName').value,
+    emergRelationship: document.getElementById('c-emergRelationship').value,
+    emergPhone: document.getElementById('c-emergPhone').value,
+    vehicleMake: v.make, vehicleModel: v.model,
+    vehicleYear: v.year || '', vehicleColour: v.colour || '',
+    vehicleRego: v.rego || '', vehicleVin: v.vin || '',
+    startDate, endDate,
+    bondAmount: bondAmount || '0',
+    bondDueDate: document.getElementById('c-bondDueDate').value,
+    weeklyPayment: weeklyRate,
+    dlfAmount: dlfAmount || '0',
+    insuranceExcess: document.getElementById('c-insuranceExcess').value || '$1,000',
+    hoOdometer: document.getElementById('c-odometer').value,
+    hoFuel: document.getElementById('c-fuelLevel').value,
+    hoDamage: document.getElementById('c-existingDamage').value,
+    saveOnly: true
+  };
+
+  const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const result = await res.json();
+
+  if (!res.ok) {
+    alert('Error saving contract: ' + result.error);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Save to Vehicle';
+    btn.disabled = false;
+    return;
+  }
+
+  // Update vehicle in Supabase and local state
+  const clientPhone    = document.getElementById('c-clientPhone').value;
+  const clientAddress  = document.getElementById('c-clientAddress').value;
+  const clientLicence  = document.getElementById('c-clientLicence').value;
+  const clientStateFld = document.getElementById('c-clientState').value;
+  const clientExpiry   = document.getElementById('c-clientExpiry').value;
+  const emergName      = document.getElementById('c-emergName').value;
+  const emergRel       = document.getElementById('c-emergRelationship').value;
+  const emergPhone     = document.getElementById('c-emergPhone').value;
+
+  const vehicleUpdate = {
+    lessee_name: clientName, lessee_email: clientEmail || null,
+    lessee_phone: clientPhone || null, lessee_address: clientAddress || null,
+    lessee_licence: clientLicence || null, lessee_state: clientStateFld || null,
+    lessee_expiry: clientExpiry || null, lessee_emerg_name: emergName || null,
+    lessee_emerg_rel: emergRel || null, lessee_emerg_phone: emergPhone || null,
+    weekly_rate: parseFloat(weeklyRate) || 0,
+    bond_amount: parseFloat(bondAmount) || 0,
+    dlf_amount: parseFloat(dlfAmount) || 0,
+    status: 'active'
+  };
+  await sb.from('vehicles').update(vehicleUpdate).eq('id', vehicleId);
+
+  v.status = 'active'; v.lname = clientName; v.lemail = clientEmail; v.lphone = clientPhone;
+  v.rate = weeklyRate; v.bond = bondAmount; v.dlf = dlfAmount;
+  vehicles = vehicles.map(x => x.id === v.id ? v : x);
+
+  const { data: cData } = await sb.from('contracts').select('*').order('created_at', { ascending: false });
+  contracts = cData || [];
+
+  closeContractModal();
+  renderAll();
+  alert(`Saved! Contract for ${clientName} has been recorded against ${v.make} ${v.model}. No email was sent.`);
 }
 
 function closeContractModal() {
