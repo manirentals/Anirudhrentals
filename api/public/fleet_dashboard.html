@@ -773,14 +773,20 @@ function renderVehicles() {
     
     return `
     <tr>
-      <td><div class="vehicle-info">
-        <span class="vehicle-name">${v.make} ${v.model}</span>
-        <span class="vehicle-sub">${v.year || ''} ${v.colour ? '· ' + v.colour : ''}</span>
-        <button class="btn-action btn-edit" title="Edit Vehicle" onclick="editVehicle('${v.id}')" style="margin-top:8px; width:fit-content;">
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
-          Edit vehicle
-        </button>
-      </div></td>
+      <td style="vertical-align: top; padding-top: 14px;">
+        <div class="vehicle-info">
+          <span class="vehicle-name">${v.make} ${v.model}</span>
+          <span class="vehicle-sub">${v.year || ''} ${v.colour ? '· ' + v.colour : ''}</span>
+          <div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="btn-icon" title="Edit Vehicle" onclick="editVehicle('${v.id}')">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+            </button>
+            <button class="btn-icon" title="Delete" onclick="deleteVehicle('${v.id}')" style="color:var(--red);">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </div>
+      </td>
       <td style="vertical-align: top; padding-top: 14px;">
         <div style="font-weight:600; text-transform:uppercase; margin-bottom: 2px;">${v.rego || '—'}</div>
         ${v.regoExpiry ? (() => {
@@ -808,16 +814,12 @@ function renderVehicles() {
       <td style="font-weight:600">${v.rate ? '$' + parseFloat(v.rate).toFixed(0) : '—'}</td>
       <td>${v.bond ? '$' + parseFloat(v.bond).toFixed(0) : '—'}</td>
       <td><span class="badge badge-${v.status}">${v.status}</span></td>
-      <td><div class="action-grid" style="grid-template-columns: 1fr; width: 110px;">
-        <button class="btn-action btn-contract" title="Send Contract" onclick="openContractModal('${v.id}')">
+      <td>
+        <button class="btn-action btn-contract" title="Send Contract" onclick="openContractModal('${v.id}')" style="width: 140px;">
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
           Contract
         </button>
-        <button class="btn-action btn-delete" title="Delete" onclick="deleteVehicle('${v.id}')">
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-          Delete
-        </button>
-      </div></td>
+      </td>
     </tr>`;
   }).join('');
 }
