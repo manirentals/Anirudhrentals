@@ -85,14 +85,15 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .btn-icon:hover { background: var(--accent-light); color: var(--accent); border-color: var(--blue-border); transform: scale(1.05); }
 
 /* ── ACTION GRID ── */
-.action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 140px; }
-.btn-action { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.1s; text-decoration: none; min-width: 0; overflow: hidden; white-space: nowrap; }
-.btn-action:hover { background: var(--accent-light); color: var(--accent); border-color: var(--blue-border); }
-.btn-action svg { flex-shrink: 0; }
-.btn-action.btn-contract { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
-.btn-action.btn-return { color: var(--amber); border-color: var(--amber-border); background: var(--amber-bg); }
-.btn-action.btn-edit { color: var(--text); border-color: var(--border-strong); }
-.btn-action.btn-delete { color: var(--red); border-color: #fecaca; background: var(--red-bg); }
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 220px; padding: 4px 0; }
+.btn-action { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted); transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; white-space: nowrap; box-shadow: var(--shadow-sm); }
+.btn-action:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); filter: brightness(0.95); }
+.btn-action:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+.btn-action svg { flex-shrink: 0; width: 14px; height: 14px; }
+.btn-action.btn-contract { color: #fff; background: var(--green); border-color: var(--green); }
+.btn-action.btn-return { color: #fff; background: var(--amber); border-color: var(--amber); }
+.btn-action.btn-edit { color: #1e293b; background: #f1f5f9; border-color: #cbd5e1; }
+.btn-action.btn-delete { color: #fff; background: var(--red); border-color: var(--red); }
 
 /* ── TABLE ── */
 .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
