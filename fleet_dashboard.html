@@ -462,7 +462,11 @@ tbody tr:hover { background: #f8fbff; }
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeContractModal()">Cancel</button>
-      <button class="btn btn-green" onclick="sendContract()">
+      <button class="btn btn-outline" onclick="generateContractPreview()" style="color:var(--accent);border-color:var(--accent);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
+        Preview &amp; Print PDF
+      </button>
+      <button id="c-sendBtn" class="btn btn-green" onclick="sendContract()">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
         Send Contract to Client
       </button>
@@ -769,6 +773,10 @@ function renderVehicles() {
     const lesseeCell = v.lname
       ? `<div style="font-weight:500">${v.lname}</div><div style="font-size:11px;color:var(--text-muted)">${v.lemail || ''}</div>`
       : '<span style="color:var(--text-light)">—</span>';
+    // Let's try to find the contract for this vehicle to show dates
+    const c = contracts.find(x => x.vehicle_id === v.id && x.status === 'signed');
+    const dateRow = c ? `<div style="font-size:10px; color:var(--accent); margin-top:2px; font-weight:500;">${c.start_date || '?'} → ${c.end_date || '?'}</div>` : '';
+    
     return `
     <tr>
       <td><div class="vehicle-info">
@@ -776,7 +784,7 @@ function renderVehicles() {
         <span class="vehicle-sub">${v.year || ''} ${v.colour ? '· ' + v.colour : ''}</span>
       </div></td>
       <td style="font-weight:600; text-transform:uppercase">${v.rego || '—'}</td>
-      <td>${lesseeCell}</td>
+      <td>${lesseeCell}${dateRow}</td>
       <td style="font-weight:600">${v.rate ? '$' + parseFloat(v.rate).toFixed(0) : '—'}</td>
       <td>${v.bond ? '$' + parseFloat(v.bond).toFixed(0) : '—'}</td>
       <td><span class="badge badge-${v.status}">${v.status}</span></td>
@@ -1130,6 +1138,137 @@ function openContractModal(vehicleId) {
 function toggleExternalFields() {
   const isExt = document.getElementById('c-isExternal').checked;
   document.getElementById('c-externalLinkContainer').style.display = isExt ? 'block' : 'none';
+  const btn = document.getElementById('c-sendBtn');
+  if (isExt) {
+    btn.innerHTML = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg> Save & Attach External Link';
+    btn.className = 'btn btn-primary';
+  } else {
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg> Send Contract to Client';
+    btn.className = 'btn btn-green';
+  }
+}
+
+async function generateContractPreview() {
+  const vId = document.getElementById('c-vehicleId').value;
+  const v = vehicles.find(x => x.id === vId);
+  if (!v) return alert('Vehicle not found.');
+
+  const clientName = document.getElementById('c-clientName').value || '_________________';
+  const clientEmail = document.getElementById('c-clientEmail').value || '_________________';
+  const clientAddress = document.getElementById('c-clientAddress').value || '_________________';
+  const clientLicence = document.getElementById('c-clientLicence').value || '_________________';
+  const clientState = document.getElementById('c-clientState').value || '_________________';
+  const clientExpiry = document.getElementById('c-clientExpiry').value || '_________________';
+  const weeklyRate = document.getElementById('c-rate').value || '0.00';
+  const bondAmount = document.getElementById('c-bond').value || '0.00';
+  const dlfAmount = document.getElementById('c-dlf').value || '0.00';
+  const startDate = document.getElementById('c-startDate').value || '_________________';
+  const endDate = document.getElementById('c-endDate').value || '_________________';
+
+  const previewHTML = `
+    <html>
+      <head>
+        <title>Contract Preview - ${clientName}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 40px; 
+            color: #1e293b; 
+            line-height: 1.5; 
+            background: #f1f5f9; 
+            font-size: 11px;
+          }
+          .page {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px 60px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          }
+          h1 { font-size: 18px; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #000; text-align: center; }
+          .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-style: italic; font-size: 12px; }
+          .section-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 20px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; margin-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+          td { border: 1px solid #e2e8f0; padding: 6px 10px; }
+          .lbl { background: #f8fafc; font-weight: 600; width: 35%; color: #475569; }
+          .val { background: #fff; }
+          .clause { margin-bottom: 8px; }
+          .clause-num { font-weight: 700; margin-right: 8px; }
+          .sig-box { display: flex; gap: 30px; margin-top: 30px; }
+          .sig-col { flex: 1; border: 1px solid #e2e8f0; border-radius: 4px; padding: 15px; }
+          .sig-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; display: block; padding-bottom: 40px; }
+          @media print {
+            body { background: #fff; padding: 0; }
+            .page { box-shadow: none; width: 100%; max-width: none; border: none; margin: 0; padding: 0; }
+            .btn-print { display: none; }
+          }
+          .toolbar { background: #1e293b; color: #fff; padding: 10px 20px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 20px; }
+          .btn-print { background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+        </style>
+      </head>
+      <body>
+        <div class="toolbar btn-print">
+          <span>Manual Contract Generation</span>
+          <button class="btn-print" onclick="window.print()">Download / Save as PDF</button>
+        </div>
+        <div class="page">
+          <h1>Motor Vehicle Rental Agreement</h1>
+          <div class="subtitle">Private Arrangement — Victoria, Australia</div>
+
+          <div class="section-header">Lessor Details</div>
+          <table>
+            <tr><td class="lbl">Name</td><td class="val">Anirudh Ahlawat</td></tr>
+            <tr><td class="lbl">Address</td><td class="val">36 Clearwater Rise Parade, Truganina VIC 3029</td></tr>
+            <tr><td class="lbl">Contact</td><td class="val">+61 401 991 420</td></tr>
+          </table>
+
+          <div class="section-header">Lessee Details</div>
+          <table>
+            <tr><td class="lbl">Full Name</td><td class="val">${clientName}</td></tr>
+            <tr><td class="lbl">Address</td><td class="val">${clientAddress}</td></tr>
+            <tr><td class="lbl">Email</td><td class="val">${clientEmail}</td></tr>
+            <tr><td class="lbl">Licence No.</td><td class="val">${clientLicence}</td></tr>
+            <tr><td class="lbl">Licence State</td><td class="val">${clientState}</td></tr>
+            <tr><td class="lbl">Licence Expiry</td><td class="val">${clientExpiry}</td></tr>
+          </table>
+
+          <div class="section-header">Vehicle Details</div>
+          <table>
+            <tr><td class="lbl">Make / Model</td><td class="val">${v.make} ${v.model}</td></tr>
+            <tr><td class="lbl">Year / Colour</td><td class="val">${v.year || '—'} / ${v.colour || '—'}</td></tr>
+            <tr><td class="lbl">Registration</td><td class="val">${v.rego || '—'}</td></tr>
+            <tr><td class="lbl">VIN</td><td class="val">${v.vin || '—'}</td></tr>
+          </table>
+
+          <div class="section-header">Rental Parameters</div>
+          <table>
+            <tr><td class="lbl">Weekly Rental Rate</td><td class="val">$${weeklyRate} AUD</td></tr>
+            <tr><td class="lbl">Security Bond</td><td class="val">$${bondAmount} AUD</td></tr>
+            <tr><td class="lbl">DLF Amount</td><td class="val">$${dlfAmount} AUD</td></tr>
+            <tr><td class="lbl">Start Date</td><td class="val">${startDate}</td></tr>
+            <tr><td class="lbl">End Date</td><td class="val">${endDate}</td></tr>
+          </table>
+
+          <div class="section-header">Core Agreement Summary</div>
+          <div class="clause">
+            The Lessor agrees to lease the Vehicle to the Lessee for the period specified above. The Lessee accepts full liability for the Vehicle, including but not limited to tolls, fines, and any damage up to the DLF amount.
+          </div>
+
+          <div class="sig-box">
+            <div class="sig-col"><span class="sig-lbl">Lessor Signature</span>Anirudh Ahlawat</div>
+            <div class="sig-col"><span class="sig-lbl">Lessee Signature</span>${clientName}</div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank');
+  win.document.write(previewHTML);
+  win.document.close();
+  win.setTimeout(() => win.print(), 1000);
 }
 
 function closeContractModal() {
@@ -1144,6 +1283,14 @@ async function sendContract() {
 
   const isExternal = document.getElementById('c-isExternal').checked;
   const externalLink = document.getElementById('c-externalLink').value;
+
+  const clientName = document.getElementById('c-clientName').value;
+  const clientEmail = document.getElementById('c-clientEmail').value;
+  const weeklyRate = document.getElementById('c-rate').value;
+  const bondAmount = document.getElementById('c-bond').value;
+  const dlfAmount = document.getElementById('c-dlf').value;
+  const startDate = document.getElementById('c-startDate').value;
+  const endDate = document.getElementById('c-endDate').value;
 
   if (isExternal && !externalLink) return alert('Please enter the External Contract Link URL.');
 
