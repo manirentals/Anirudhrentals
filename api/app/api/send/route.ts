@@ -25,7 +25,8 @@ export async function POST(req: Request) {
           lessor_name: data.lessorName,
           lessor_address: data.lessorAddress,
           lessor_phone: data.lessorPhone,
-          
+          lessor_email: data.lessorEmail || null,
+
           client_name: data.clientName,
           client_email: data.clientEmail,
           client_address: data.clientAddress,
@@ -36,15 +37,26 @@ export async function POST(req: Request) {
           vehicle_make: data.vehicleMake,
           vehicle_model: data.vehicleModel,
           vehicle_year: data.vehicleYear,
+          vehicle_colour: data.vehicleColour || null,
           vehicle_rego: data.vehicleRego,
           vehicle_vin: data.vehicleVin,
+
+          emerg_name: data.emergName || null,
+          emerg_relationship: data.emergRelationship || null,
+          emerg_phone: data.emergPhone || null,
 
           start_date: data.startDate,
           end_date: data.endDate,
           bond_amount: data.bondAmount,
+          bond_due_date: data.bondDueDate || null,
           weekly_payment: data.weeklyPayment,
           dlf_amount: data.dlfAmount,
-          
+          insurance_excess: data.insuranceExcess || '$1,000',
+
+          ho_odometer: data.hoOdometer || null,
+          ho_fuel: data.hoFuel || null,
+          ho_damage: data.hoDamage || null,
+
           status: data.externalLink ? 'signed' : 'pending',
           external_link: data.externalLink || null,
           signature: data.externalLink ? 'EXTERNAL' : null,
