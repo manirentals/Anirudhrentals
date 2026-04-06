@@ -1377,6 +1377,10 @@ async function sendContract() {
     externalLink: isExternal ? externalLink : null
   };
 
+  // 1. Remove any existing PENDING contracts for this vehicle to avoid duplicates
+  await sb.from('contracts').delete().eq('vehicle_rego', v.rego).eq('status', 'pending');
+
+  // 2. Insert new contract via API
   const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const result = await res.json();
   if (!res.ok) { alert('Error sending contract: ' + result.error); return; }
