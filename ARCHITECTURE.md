@@ -90,8 +90,9 @@ This project is the **MCR (Mani's Car Rentals) vehicle leasing business manageme
 |------|-------------|
 | `README.md` | Setup instructions, deployment steps, tech stack |
 | `ARCHITECTURE.md` | **This file** — system design and data flow |
-| `fleet_dashboard.html` | **Source dashboard file.** Vehicle registry, expense tracker logging actual outgoings, real-time rego countdown strip, active P&L dashboard, contract dispatch, and a Contracts tab showing live signing status. Reads/writes all data directly to Supabase via the JS CDN client. Three config constants at the top of the script: `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`. Lessee info and rental terms (Weekly Rate, Bond, DLF) are ONLY set via the "Send Contract" modal, never via "Add Vehicle" directly (though they save back to the vehicle record). |
-| `car_lease_fillable.html` | Standalone fillable contract. Click "Configure Contract" → fill fields → "Print as PDF". No backend needed. |
+| `fleet_dashboard.html` | **Source dashboard file.** Vehicle registry, expense tracker, and contract hub. Now features **current lessee** and **lease dates** directly in the fleet table. The "Send Contract" modal dynamically adapts for digital send (Resend), external link attachment (Legacy support), and manual A4 contract generation (Client-side HTML preview). |
+| `rental_agreement.html` | **Official Rental Agreement Template.** A full legal document containing 13 clauses (Maintenance, Fines, Default, etc.). Used as the source for both digital signing and manual PDF generation. Branded for Anirudh Ahlawat. |
+| `car_lease_fillable.html` | Legacy standalone fillable contract. Use `rental_agreement.html` / `fleet_dashboard.html` for new leases. |
 
 ### `api/` — Next.js Backend (deploy to Vercel)
 
@@ -107,9 +108,9 @@ This project is the **MCR (Mani's Car Rentals) vehicle leasing business manageme
 | `public/fleet_dashboard.html` | Vercel-served homepage dashboard available at `/fleet_dashboard.html` |
 | `app/page.tsx` | Redirects the site root to `/fleet_dashboard.html` |
 | `app/admin/page.tsx` | Admin dashboard page — form to input contract details and trigger dispatch via `/api/send` |
-| `app/api/send/route.ts` | **POST endpoint.** Receives contract data → inserts into Supabase `contracts` table → sends email via Resend with a unique `/sign/[id]` link. Has CORS headers configured to allow requests from the standalone fleet dashboard HTML. |
+| `app/api/send/route.ts` | **POST endpoint.** Receives contract data → inserts into Supabase `contracts` table → sends email via Resend with a unique `/sign/[id]` link. Automatically handles `externalLink` parameters by skipping email and auto-signing. |
 | `app/api/config/route.ts` | **GET endpoint.** Returns `NEXT_PUBLIC_` environment variables to the dashboard. Allows the static HTML dashboard to "auto-configure" on Vercel without manual hardcoding. |
-| `app/sign/[id]/page.tsx` | **Client-facing page.** Fetches contract by ID from Supabase → renders professional legal agreement → captures digital signature → updates `signature`, `signed_at`, and `status='signed'` in Supabase. |
+| `app/sign/[id]/page.tsx` | **Client-facing page.** Fetches contract by ID from Supabase → renders the professional 13-clause legal agreement → captures digital signature → updates `signature`, `signed_at`, and `status='signed'`. |
 
 ---
 

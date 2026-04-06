@@ -118,25 +118,24 @@ let SUPABASE_ANON_KEY = 'your-anon-key';
 ### Fleet Dashboard (`fleet_dashboard.html`)
 The central hub. In production it is served from `/fleet_dashboard.html` by Vercel. Requires Supabase credentials to be configured.
 
-1. **Overview tab** — Add vehicles, see stat cards (Total Vehicles, Active Leases, Monthly Revenue, Outgoings, Net Profit), and track upcoming Rego renewals via the visual countdown strip. Each vehicle also stores finance dates and static inputs (purchase date, loan term, car cost, repayments, interest).
-2. **Send Contract** — Click the green arrow icon on any vehicle row → fills vehicle data automatically → enter client details, dates, and per-contract rental terms (Rate, Bond, DLF) → dispatches contract. On success a modal shows the signing link which can be copied if needed.
+1. **Overview tab** — Add vehicles, see stat cards (Total Vehicles, Active Leases, Monthly Revenue, Outgoings, Net Profit), and track upcoming Rego renewals. The table shows the **Current Lessee** and their **Lease Dates** (Start → End) for at-a-glance management.
+2. **Send/Save Contract** — Click the green arrow icon on any vehicle row. This opens a versatile modal where you can:
+    - **Digital Send**: Fill client details and email a unique signing link via Resend.
+    - **External Link**: Attach an existing contract link (e.g., Google Drive), which skips the email and marks the vehicle as Active immediately.
+    - **Manual Download**: Use the **"Preview & Print PDF"** button to generate a fully filled, professional A4 contract for manual signing or local saving.
 3. **Outgoings tab** — Log operational expenses per vehicle (Insurance, Rego Renewals, Servicing, Fuel, Repairs, Tolls, Misc, CPV). These actual expenses are stored in Supabase and drive the dynamic P&L dashboard.
-4. **P&L tab** — Per-vehicle profit & loss cards with a Fleet Totals summary plus:
-   - operational monthly P&L from rent and logged outgoings
-   - finance expense till date
-   - Year 1 to Year 5 cost breakdown
-   - 5-year projected outgoings total
-5. **Contracts tab** — All sent contracts pulled live from Supabase. Shows lessee, vehicle, sent date, lease period, and status (Pending / Signed). Includes a Copy Link button for any unsigned contracts.
+4. **P&L tab** — Per-vehicle profit & loss cards with a Fleet Totals summary including operational monthly P&L and 5-year cost projections.
+5. **Contracts tab** — All contracts pulled live from Supabase. Includes visual badges for **EXTERNAL** links and a one-click button to view those external documents.
 
 ### Contract Flow
-1. Click "Send Contract" on a vehicle in the fleet dashboard
-2. The fleet dashboard POSTs contract details to the Next.js API (`/api/send`)
-3. The API saves the contract to Supabase and emails the client a unique signing link via Resend
-4. Client opens the link (`/sign/[id]`), reviews the full legal agreement, draws their signature, and submits
-5. Signature is saved to Supabase and the contract status updates to `signed`
+1. Click the "Send/Save" icon on a vehicle in the fleet dashboard.
+2. If sending digitally: The dashboard POSTs details to the Next.js API (`/api/send`), which saves to Supabase and emails the client via Resend.
+3. If linking externally: The dashboard updates the vehicle and contract records with the provided URL, bypassing the email flow.
+4. If downloading manually: The dashboard generates a client-side HTML preview using the professional `rental_agreement.html` template and triggers the browser's print-to-PDF dialog.
+5. Digital signatures are captured at `/sign/[id]` and saved directly back to the database.
 
-### Offline Contract Generator (`car_lease_fillable.html`)
-Standalone fillable contract. Click "Configure Contract" → fill all fields → "Print as PDF". No backend or internet connection needed.
+### Rental Agreement Template (`rental_agreement.html`)
+The official 13-clause legal agreement used for all manual and digital contracts. Branded for **Anirudh Ahlawat** (Lessor). Fully A4-compliant and optimized for printing.
 
 ---
 
