@@ -1383,27 +1383,35 @@ function openContractModal(vehicleId) {
   document.getElementById('c-vehicleSummary').textContent = `${v.make} ${v.model} (${v.year || ''} ${v.colour || ''})`.trim();
   document.getElementById('c-vehicleDetails').textContent = `Rego: ${v.rego || '—'}`;
 
-  // Find most recent contract for this vehicle to pre-fill details
-  const existing = contracts.find(c => c.vehicle_rego === v.rego);
+  // Pre-fill rental terms from vehicle record only
+  document.getElementById('c-rate').value = v.rate || '';
+  document.getElementById('c-bond').value = v.bond || '';
+  document.getElementById('c-dlf').value = v.dlf || '';
 
-  document.getElementById('c-rate').value = v.rate || (existing ? existing.weekly_payment : '');
-  document.getElementById('c-bond').value = v.bond || (existing ? existing.bond_amount : '');
-  document.getElementById('c-dlf').value = v.dlf || (existing ? existing.dlf_amount : '');
+  // Pre-fill lessee details ONLY if this vehicle currently has an active lessee
+  // (i.e. re-issuing a contract to the same person already on the vehicle)
+  const isActive = v.status === 'active' && v.lname;
+  document.getElementById('c-clientName').value    = isActive ? (v.lname  || '') : '';
+  document.getElementById('c-clientEmail').value   = isActive ? (v.lemail || '') : '';
+  document.getElementById('c-clientPhone').value   = isActive ? (v.lphone || '') : '';
+  document.getElementById('c-clientAddress').value = isActive ? (v.laddress || '') : '';
+  document.getElementById('c-clientLicence').value = isActive ? (v.llicence || '') : '';
+  document.getElementById('c-clientState').value   = isActive ? (v.lstate || '') : '';
+  document.getElementById('c-clientExpiry').value  = isActive ? (v.lexpiry || '') : '';
 
-  document.getElementById('c-clientName').value = v.lname || (existing ? existing.client_name : '');
-  document.getElementById('c-clientEmail').value = v.lemail || (existing ? existing.client_email : '');
-  document.getElementById('c-clientPhone').value = existing ? (existing.client_phone || '') : '';
-  document.getElementById('c-clientAddress').value = existing ? (existing.client_address || '') : '';
-  document.getElementById('c-clientLicence').value = existing ? (existing.client_licence || '') : '';
-  document.getElementById('c-clientState').value = existing ? (existing.client_state || '') : '';
-  document.getElementById('c-clientExpiry').value = existing ? (existing.client_expiry || '') : '';
+  // Emergency contact is personal per lessee — always start blank for a new contract
+  document.getElementById('c-emergName').value         = '';
+  document.getElementById('c-emergRelationship').value = '';
+  document.getElementById('c-emergPhone').value        = '';
 
-  document.getElementById('c-emergName').value = existing ? (existing.emerg_name || '') : '';
-  document.getElementById('c-emergRelationship').value = existing ? (existing.emerg_relationship || '') : '';
-  document.getElementById('c-emergPhone').value = existing ? (existing.emerg_phone || '') : '';
-
-  document.getElementById('c-startDate').value = existing ? (existing.start_date || '') : '';
-  document.getElementById('c-endDate').value = existing ? (existing.end_date || '') : '';
+  // Dates always start blank for a new contract
+  document.getElementById('c-startDate').value = '';
+  document.getElementById('c-endDate').value   = '';
+  document.getElementById('c-bondDueDate').value = '';
+  document.getElementById('c-odometer').value    = '';
+  document.getElementById('c-fuelLevel').value   = '';
+  document.getElementById('c-existingDamage').value = '';
+  document.getElementById('c-insuranceExcess').value = '$1,000';
 
   // Reset External Fields
   document.getElementById('c-isExternal').checked = false;
