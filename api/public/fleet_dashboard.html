@@ -540,7 +540,7 @@ tbody tr:hover { background: #f8fbff; }
 // ══════════════════════════════════════════════
 // CONFIG — automatically fetched from Vercel/API
 // ══════════════════════════════════════════════
-let API_URL           = 'http://localhost:3000';
+let API_URL           = window.location.origin;  // auto-detects localhost or Vercel domain
 let SUPABASE_URL      = '';
 let SUPABASE_ANON_KEY = '';
 let sb                = null; 
@@ -1911,11 +1911,19 @@ async function saveContractOnly() {
     saveOnly: true
   };
 
-  const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  const result = await res.json();
+  let res, result;
+  try {
+    res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    result = await res.json();
+  } catch (err) {
+    alert('Network error saving contract: ' + err.message);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Save to Vehicle';
+    btn.disabled = false;
+    return;
+  }
 
   if (!res.ok) {
-    alert('Error saving contract: ' + result.error);
+    alert('Error saving contract: ' + (result.error || res.statusText));
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg> Save to Vehicle';
     btn.disabled = false;
     return;
@@ -2026,9 +2034,15 @@ async function sendContract() {
   await sb.from('contracts').delete().eq('vehicle_rego', v.rego).eq('status', 'pending');
 
   // 2. Insert new contract via API
-  const res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  const result = await res.json();
-  if (!res.ok) { alert('Error sending contract: ' + result.error); return; }
+  let res, result;
+  try {
+    res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    result = await res.json();
+  } catch (err) {
+    alert('Network error sending contract: ' + err.message);
+    return;
+  }
+  if (!res.ok) { alert('Error sending contract: ' + (result.error || res.statusText)); return; }
 
   // Update vehicle lessee details + rates + status in Supabase and local state
   const clientPhone    = document.getElementById('c-clientPhone').value;
