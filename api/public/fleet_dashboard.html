@@ -1516,6 +1516,10 @@ async function updateExistingContract(sendEmail) {
   const origLabel = btn.innerHTML;
   btn.textContent = 'Saving…'; btn.disabled = true;
 
+  // Check if this is being updated as an external contract
+  const isExternal = document.getElementById('c-isExternal').checked;
+  const externalLink = document.getElementById('c-externalLink').value;
+
   const update = {
     client_name: f.clientName, client_email: f.clientEmail, client_phone: f.clientPhone || null,
     client_address: f.clientAddress, client_licence: f.clientLicence,
@@ -1531,10 +1535,11 @@ async function updateExistingContract(sendEmail) {
     bond_due_date: f.bondDueDate || null, dlf_amount: f.dlfAmount,
     insurance_excess: f.insuranceExcess, start_date: f.startDate, end_date: f.endDate,
     ho_odometer: f.odometer || null, ho_fuel: f.fuelLevel || null, ho_damage: f.existingDamage || null,
-    // Clear all signatures so both parties must re-sign
-    signature: null, signed_at: null,
-    lessor_signature: null, lessor_signed_at: null,
-    status: 'pending'
+    external_link: isExternal ? externalLink : existing.external_link || null,
+    // External contracts are considered signed; internal contracts reset to pending
+    status: isExternal ? 'signed' : 'pending',
+    signature: isExternal ? 'EXTERNAL' : null,
+    signed_at: isExternal ? new Date().toISOString() : null,
   };
 
   const { error } = await sb.from('contracts').update(update).eq('id', editingContractId);
@@ -1542,6 +1547,11 @@ async function updateExistingContract(sendEmail) {
     alert('Update failed: ' + error.message);
     btn.innerHTML = origLabel; btn.disabled = false;
     return;
+  }
+
+  // Separately clear lessor signature fields (these columns may need a schema reload in Supabase)
+  if (!isExternal) {
+    await sb.from('contracts').update({ lessor_signature: null, lessor_signed_at: null }).eq('id', editingContractId);
   }
 
   // If sendEmail, fire the resend endpoint
