@@ -1914,6 +1914,9 @@ async function saveContractOnly() {
     saveOnly: true
   };
 
+  // Remove any existing pending contracts for this vehicle before creating a new one
+  await sb.from('contracts').delete().eq('vehicle_rego', v.rego).eq('status', 'pending');
+
   let res, result;
   try {
     res = await fetch(`${API_URL}/api/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
